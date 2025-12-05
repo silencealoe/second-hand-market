@@ -1,0 +1,1053 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/users/register": {
+      "post": {
+        "operationId": "UsersController_register",
+        "summary": "用户注册",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "注册成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "用户名或邮箱已存在"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/login": {
+      "post": {
+        "operationId": "UsersController_login",
+        "summary": "用户登录",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "用户名或密码错误"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "summary": "获取所有用户列表",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "summary": "根据ID获取用户信息",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "summary": "更新用户信息",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "用户不存在"
+          },
+          "409": {
+            "description": "邮箱已被其他用户使用"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "summary": "删除用户",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "删除成功"
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/products": {
+      "post": {
+        "operationId": "ProductsController_create",
+        "summary": "创建商品",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "商品创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      },
+      "get": {
+        "operationId": "ProductsController_findAll",
+        "summary": "获取商品列表",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "商品状态筛选",
+            "schema": {
+              "enum": [
+                "on_sale",
+                "sold",
+                "off_shelf"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "分类筛选",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": false,
+            "in": "query",
+            "description": "用户ID筛选",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "页码，从1开始",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "每页数量",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "operationId": "ProductsController_findOne",
+        "summary": "根据ID获取商品详情",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "商品ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "商品不存在"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      },
+      "patch": {
+        "operationId": "ProductsController_update",
+        "summary": "更新商品信息",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "商品ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "商品不存在"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductsController_remove",
+        "summary": "删除商品",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "商品ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "删除成功"
+          },
+          "404": {
+            "description": "商品不存在"
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/comments": {
+      "post": {
+        "operationId": "CommentsController_create",
+        "summary": "创建评论",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "评论创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      },
+      "get": {
+        "operationId": "CommentsController_findAll",
+        "summary": "获取评论列表",
+        "parameters": [
+          {
+            "name": "product_id",
+            "required": false,
+            "in": "query",
+            "description": "商品ID筛选",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Comment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/comments/{id}": {
+      "get": {
+        "operationId": "CommentsController_findOne",
+        "summary": "根据ID获取评论详情",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "评论ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "评论不存在"
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      },
+      "patch": {
+        "operationId": "CommentsController_update",
+        "summary": "更新评论",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "评论ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "评论不存在"
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      },
+      "delete": {
+        "operationId": "CommentsController_remove",
+        "summary": "删除评论",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "评论ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "删除成功"
+          },
+          "404": {
+            "description": "评论不存在"
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/upload/images": {
+      "post": {
+        "operationId": "UploadController_uploadImages",
+        "summary": "上传图片",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "上传成功"
+          }
+        },
+        "tags": [
+          "upload"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "二手交易系统 API",
+    "description": "二手交易系统后端接口文档",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "users",
+      "description": "用户相关接口"
+    },
+    {
+      "name": "products",
+      "description": "商品相关接口"
+    },
+    {
+      "name": "comments",
+      "description": "评论相关接口"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "example": "john_doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "example": "password123"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号",
+            "example": "13800138000"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "address": {
+            "type": "string",
+            "description": "地址"
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "用户ID"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "address": {
+            "type": "string",
+            "description": "地址"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "创建时间"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "访问令牌",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "description": "用户信息",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ]
+          }
+        },
+        "required": [
+          "access_token",
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "usernameOrEmail": {
+            "type": "string",
+            "description": "用户名或邮箱",
+            "example": "john_doe"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "example": "password123"
+          }
+        },
+        "required": [
+          "usernameOrEmail",
+          "password"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "邮箱"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "头像URL"
+          },
+          "address": {
+            "type": "string",
+            "description": "地址"
+          }
+        }
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "number",
+            "description": "卖家用户ID",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "商品标题",
+            "example": "二手iPhone 13"
+          },
+          "description": {
+            "type": "string",
+            "description": "商品描述",
+            "example": "9成新，功能完好"
+          },
+          "price": {
+            "type": "number",
+            "description": "价格",
+            "example": 3999.99
+          },
+          "original_price": {
+            "type": "number",
+            "description": "原价",
+            "example": 5999.99
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "on_sale",
+              "sold",
+              "off_shelf"
+            ],
+            "example": "on_sale"
+          },
+          "category": {
+            "type": "string",
+            "description": "分类",
+            "example": "电子产品"
+          },
+          "images": {
+            "description": "图片URL数组",
+            "example": [
+              "https://example.com/image1.jpg",
+              "https://example.com/image2.jpg"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "location": {
+            "type": "string",
+            "description": "所在地",
+            "example": "北京市朝阳区"
+          }
+        },
+        "required": [
+          "user_id",
+          "title",
+          "price"
+        ]
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "商品ID"
+          },
+          "user_id": {
+            "type": "number",
+            "description": "卖家用户ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "商品标题"
+          },
+          "description": {
+            "type": "string",
+            "description": "商品描述"
+          },
+          "price": {
+            "type": "number",
+            "description": "价格"
+          },
+          "original_price": {
+            "type": "number",
+            "description": "原价"
+          },
+          "status": {
+            "type": "string",
+            "description": "状态：on_sale-在售, sold-已售, off_shelf-下架",
+            "enum": [
+              "on_sale",
+              "sold",
+              "off_shelf"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "分类"
+          },
+          "images": {
+            "description": "图片URL数组",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "location": {
+            "type": "string",
+            "description": "所在地"
+          },
+          "view_count": {
+            "type": "number",
+            "description": "浏览次数"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "创建时间"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "title",
+          "price",
+          "status",
+          "view_count",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateProductDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "商品标题"
+          },
+          "description": {
+            "type": "string",
+            "description": "商品描述"
+          },
+          "price": {
+            "type": "number",
+            "description": "价格"
+          },
+          "original_price": {
+            "type": "number",
+            "description": "原价"
+          },
+          "status": {
+            "type": "string",
+            "description": "状态",
+            "enum": [
+              "on_sale",
+              "sold",
+              "off_shelf"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "分类"
+          },
+          "images": {
+            "description": "图片URL数组",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "location": {
+            "type": "string",
+            "description": "所在地"
+          }
+        }
+      },
+      "CreateCommentDto": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "number",
+            "description": "商品ID",
+            "example": 1
+          },
+          "user_id": {
+            "type": "number",
+            "description": "评论用户ID",
+            "example": 1
+          },
+          "parent_id": {
+            "type": "number",
+            "description": "父评论ID（用于回复）",
+            "example": 1
+          },
+          "content": {
+            "type": "string",
+            "description": "评论内容",
+            "example": "这个商品看起来不错！"
+          }
+        },
+        "required": [
+          "product_id",
+          "user_id",
+          "content"
+        ]
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "评论ID"
+          },
+          "product_id": {
+            "type": "number",
+            "description": "商品ID"
+          },
+          "user_id": {
+            "type": "number",
+            "description": "评论用户ID"
+          },
+          "parent_id": {
+            "type": "number",
+            "description": "父评论ID（用于回复）"
+          },
+          "content": {
+            "type": "string",
+            "description": "评论内容"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "创建时间"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "id",
+          "product_id",
+          "user_id",
+          "content",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateCommentDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "评论内容"
+          }
+        }
+      }
+    }
+  }
+}
