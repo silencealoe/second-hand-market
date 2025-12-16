@@ -65,17 +65,24 @@
           <span class="value">{{ product.location || '未知' }}</span>
         </div>
         <div class="detail-item">
+          <span class="label">库存：</span>
+          <span class="value">{{ product.stock }}件</span>
+        </div>
+        <div class="detail-item">
           <span class="label">发布时间：</span>
           <span class="value">{{ formatDate(product.created_at) }}</span>
         </div>
       </div>
 
       <!-- 购买按钮 -->
-      <div v-if="product.status === 'on_sale'" class="buy-section">
-        <nut-button type="primary" block size="large" @click="handleBuy">
-          立即购买
-        </nut-button>
-      </div>
+<div v-if="product.status === 'on_sale'" class="buy-section">
+  <nut-button type="primary" block size="large" @click="handleBuy">
+    立即购买
+  </nut-button>
+  <nut-button type="default" block size="large" @click="handleAddToCart" style="margin-top: 10px;">
+    加入购物车
+  </nut-button>
+</div>
 
       <!-- 评论输入区域 -->
       <div class="comment-input-section">
@@ -130,9 +137,11 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getProductById, updateProduct } from '@/api/products'
 import { getComments, createComment } from '@/api/comments'
+import { createOrderAPI } from '@/api/orders'
 import type { Product, Comment } from '@/types'
 import { showToast, showDialog } from '@nutui/nutui'
 import { getUser } from '@/utils/auth'
+import { addToCart } from '@/utils/cart'
 
 const router = useRouter()
 const route = useRoute()
@@ -262,22 +271,63 @@ const handleBuy = () => {
 const confirmBuy = async () => {
   if (!product.value) return
 
+  const user = getUser()
+  if (!user) {
+    showToast.fail('请先登录')
+    router.push('/login')
+    return
+  }
+
   buying.value = true
   try {
+    // 使用订单API创建订单（包含事务处理：生成订单、扣减库存、删除购物车）
+    const order = await createOrderAPI({
+      user_id: user.id,
+      product_id: product.value.id,
+      quantity: 1,
+      shipping_address: user.address || '',
+      payment_method: '微信支付'
+    })
+    
+    showToast.success('购买成功！订单已生成')
+    
+    // 更新商品状态为已售
     await updateProduct(product.value.id, {
       status: 'sold'
     })
-    showToast.success('购买成功！')
+    
     // 更新商品状态
     product.value.status = 'sold'
-    // 重新加载商品信息
-    await loadProduct()
-  } catch (error) {
+    
+    // 跳转到订单页面
+    router.push('/orders')
+  } catch (error: any) {
     console.error('购买失败:', error)
-    showToast.fail('购买失败，请重试')
+    const errorMessage = error.response?.data?.message || '购买失败，请重试'
+    showToast.fail(errorMessage)
   } finally {
     buying.value = false
   }
+}
+
+// 加入购物车
+const handleAddToCart = async () => {
+  if (!product.value) return
+
+  const user = getUser()
+  if (!user) {
+    showToast.fail('请先登录')
+    router.push('/login')
+    return
+  }
+
+  // 不能将自己发布的商品加入购物车
+  if (product.value.user_id === user.id) {
+    showToast.fail('不能添加自己发布的商品')
+    return
+  }
+
+  await addToCart(product.value, 1)
 }
 
 const formatDate = (dateStr: string) => {

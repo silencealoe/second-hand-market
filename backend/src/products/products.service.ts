@@ -39,6 +39,7 @@ export class ProductsService {
         'product.images',
         'product.location',
         'product.view_count',
+        'product.stock',
         'product.created_at',
         'product.updated_at',
         'user.id',

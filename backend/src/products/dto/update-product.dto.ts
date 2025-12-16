@@ -45,5 +45,11 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   location?: string;
+
+  @ApiProperty({ description: '库存', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(1, { message: '库存数量必须大于等于1' })
+  stock?: number;
 }
 

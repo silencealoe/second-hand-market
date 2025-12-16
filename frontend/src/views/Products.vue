@@ -48,9 +48,22 @@
             </span>
           </div>
           <div class="product-meta">
-            <span class="location">{{ product.location || '未知地区' }}</span>
-            <span class="views">浏览 {{ product.view_count }}</span>
-          </div>
+        <span class="location">{{ product.location || '未知地区' }}</span>
+        <span class="views">浏览 {{ product.view_count }}</span>
+      </div>
+      <div class="product-stock" v-if="product.status === 'on_sale'">
+        <span :class="{ 'stock-available': product.stock > 0, 'stock-unavailable': product.stock === 0 }">
+          {{ product.stock > 0 ? `库存: ${product.stock}` : '已售罄' }}
+        </span>
+      </div>
+      <!-- <div 
+        class="add-to-cart-btn"
+        v-if="product.status === 'on_sale' && product.stock > 0"
+        @click="handleAddToCart($event, product)"
+      >
+        <nut-icon name="shopping-cart" size="16" />
+        <span>加入购物车</span>
+      </div> -->
         </div>
       </div>
     </div>
@@ -71,6 +84,7 @@ import { useRouter } from 'vue-router'
 import { getProducts } from '@/api/products'
 import type { Product } from '@/types'
 import { showToast } from '@nutui/nutui'
+import { addToCart } from '@/utils/cart'
 
 const router = useRouter()
 const gridRef = ref<HTMLElement>()
@@ -150,6 +164,24 @@ const goToDetail = (id: number) => {
 
 const handleBack = () => {
   router.back()
+}
+
+// 添加商品到购物车
+const handleAddToCart = (e: Event, product: Product) => {
+  // 阻止事件冒泡，避免触发商品详情跳转
+  e.stopPropagation()
+  
+  if (product.stock <= 0) {
+    showToast('商品已售罄')
+    return
+  }
+  
+  const success = addToCart(product)
+  if (success) {
+    showToast.success('已添加到购物车')
+  } else {
+    showToast('库存不足')
+  }
 }
 
 // 初始化加载
@@ -268,6 +300,7 @@ loadMore()
 
 .product-info {
   padding: 10px;
+  position: relative;
 }
 
 .product-title {
@@ -309,6 +342,46 @@ loadMore()
   justify-content: space-between;
   font-size: 12px;
   color: #999;
+}
+
+.product-stock {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.stock-available {
+  color: #4CAF50;
+}
+
+.stock-unavailable {
+  color: #F44336;
+}
+
+.add-to-cart-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  transition: all 0.3s;
+}
+
+.add-to-cart-btn:hover {
+  background: linear-gradient(135deg, #ff8c42 0%, #ff6b35 100%);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.5);
+}
+
+.add-to-cart-btn:active {
+  transform: scale(0.95);
 }
 
 </style>

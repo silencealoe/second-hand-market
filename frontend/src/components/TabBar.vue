@@ -5,12 +5,20 @@
         <Shop />
       </template>
     </nut-tabbar-item>
-    <nut-tabbar-item tab-title="发布" name="1">
+    <nut-tabbar-item tab-title="购物车" name="1">
+      <template #icon>
+        <Cart />
+      </template>
+      <template #info>
+        <span v-if="getTotalCount > 0" class="cart-count">{{ getTotalCount }}</span>
+      </template>
+    </nut-tabbar-item>
+    <nut-tabbar-item tab-title="发布" name="2">
       <template #icon>
         <Add />
       </template>
     </nut-tabbar-item>
-    <nut-tabbar-item tab-title="我的" name="2">
+    <nut-tabbar-item tab-title="我的" name="3">
       <template #icon>
         <My />
       </template>
@@ -21,7 +29,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'  
 import { useRouter, useRoute } from 'vue-router'
-import { Shop, Add, My } from '@nutui/icons-vue'
+import { Shop, Add, My, Cart } from '@nutui/icons-vue'
+import { getTotalCount } from '@/utils/cart'
 
 const router = useRouter()
 const route = useRoute()
@@ -34,10 +43,12 @@ watch(
   (path) => {
     if (path === '/products' || path.startsWith('/product/')) {
       activeTab.value = '0'
-    } else if (path === '/publish') {
+    } else if (path === '/cart') {
       activeTab.value = '1'
-    } else if (path === '/profile') {
+    } else if (path === '/publish') {
       activeTab.value = '2'
+    } else if (path === '/profile') {
+      activeTab.value = '3'
     }
   },
   { immediate: true }
@@ -52,9 +63,12 @@ const handleTabSwitch = (item: { name: string }) => {
       router.push('/products')
       break
     case '1':
-      router.push('/publish')
+      router.push('/cart')
       break
     case '2':
+      router.push('/publish')
+      break
+    case '3':
       router.push('/profile')
       break
     default:

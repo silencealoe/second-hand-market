@@ -43,6 +43,11 @@
               <Shop />
             </template>
           </nut-cell>
+          <nut-cell title="我的订单" is-link @click="goToOrders">
+            <template #icon>
+              <Order />
+            </template>
+          </nut-cell>
           <nut-cell title="编辑资料" is-link @click="goToEditProfile">
             <template #icon>
               <Edit />
@@ -66,7 +71,7 @@ import { getUser, clearAuth, isAuthenticated as checkAuth } from '@/utils/auth'
 import { getUserById } from '@/api/users'
 import { showToast, showDialog } from '@nutui/nutui'
 import type { User } from '@/types'
-import { Shop, Edit } from '@nutui/icons-vue'
+import { Shop, Edit, Order } from '@nutui/icons-vue'
 
 const router = useRouter()
 
@@ -97,6 +102,10 @@ const goToLogin = () => {
 
 const goToMyProducts = () => {
   router.push('/my-products')
+}
+
+const goToOrders = () => {
+  router.push('/orders')
 }
 
 const goToEditProfile = () => {

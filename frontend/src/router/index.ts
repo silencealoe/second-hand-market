@@ -50,6 +50,18 @@ const router = createRouter({
           name: 'MyProducts',
           component: () => import('@/views/MyProducts.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: '/cart',
+          name: 'Cart',
+          component: () => import('@/views/Cart.vue'),
+          meta: { requiresAuth: false }
+        },
+        {
+          path: '/orders',
+          name: 'Orders',
+          component: () => import('@/views/Orders.vue'),
+          meta: { requiresAuth: true }
         }
       ]
     }

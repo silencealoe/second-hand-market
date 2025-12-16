@@ -51,6 +51,7 @@ export interface Product {
   images?: string[]
   location?: string
   view_count: number
+  stock: number
   created_at: string
   updated_at: string
 }
@@ -65,6 +66,7 @@ export interface CreateProductDto {
   category?: string
   images?: string[]
   location?: string
+  stock?: number
 }
 
 export interface UpdateProductDto {
@@ -76,6 +78,7 @@ export interface UpdateProductDto {
   category?: string
   images?: string[]
   location?: string
+  stock?: number
 }
 
 // 评论相关类型
@@ -96,7 +99,46 @@ export interface CreateCommentDto {
   content: string
 }
 
+// 订单相关类型
+export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'completed' | 'cancelled'
+
+export interface Order {
+  id: number
+  order_number: string
+  user_id: number
+  product_id: number
+  quantity: number
+  unit_price: number
+  total_price: number
+  status: OrderStatus
+  shipping_address?: string
+  payment_method?: string
+  paid_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateOrderDto {
+  user_id: number
+  product_id: number
+  quantity: number
+  shipping_address?: string
+  payment_method?: string
+}
+
 export interface UpdateCommentDto {
   content: string
+}
+
+// 购物车相关类型
+export interface CartItem {
+  id: number
+  product: Product
+  quantity: number
+  selected: boolean
+}
+
+export interface CartState {
+  items: CartItem[]
 }
 
