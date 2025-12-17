@@ -8,6 +8,8 @@ import {
 } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
 import { Comment } from '../../comments/entities/comment.entity';
+import { Cart } from '../../carts/entities/cart.entity';
+import { Order } from '../../orders/entities/order.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('users')
@@ -52,5 +54,11 @@ export class User {
 
   @OneToMany(() => Comment, (comment) => comment.user)
   comments: Comment[];
+
+  @OneToMany(() => Cart, (cart) => cart.user)
+  carts: Cart[];
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 }
 

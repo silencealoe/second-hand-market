@@ -663,6 +663,427 @@
           "upload"
         ]
       }
+    },
+    "/carts": {
+      "post": {
+        "operationId": "CartsController_create",
+        "summary": "添加商品到购物车",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "添加成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误或库存不足"
+          },
+          "404": {
+            "description": "商品不存在"
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      },
+      "get": {
+        "operationId": "CartsController_findAllByUserId",
+        "summary": "获取用户购物车列表",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "用户ID",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Cart"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      },
+      "delete": {
+        "operationId": "CartsController_clear",
+        "summary": "清空购物车",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "用户ID",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "清空成功"
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/carts/{id}": {
+      "patch": {
+        "operationId": "CartsController_update",
+        "summary": "更新购物车商品数量或选中状态",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "购物车商品ID",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "用户ID",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cart"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误或库存不足"
+          },
+          "404": {
+            "description": "购物车商品不存在"
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      },
+      "delete": {
+        "operationId": "CartsController_remove",
+        "summary": "删除购物车商品",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "购物车商品ID",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "用户ID",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "删除成功"
+          },
+          "404": {
+            "description": "购物车商品不存在"
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/carts/selected": {
+      "patch": {
+        "operationId": "CartsController_updateMultipleSelected",
+        "summary": "更新多个商品的选中状态",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "用户ID",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "更新成功"
+          },
+          "400": {
+            "description": "请求参数错误"
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/carts/batch": {
+      "delete": {
+        "operationId": "CartsController_removeMultiple",
+        "summary": "批量删除购物车商品",
+        "parameters": [
+          {
+            "name": "user_id",
+            "required": true,
+            "in": "query",
+            "description": "用户ID",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "删除成功"
+          },
+          "400": {
+            "description": "请求参数错误"
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/orders": {
+      "post": {
+        "operationId": "OrdersController_create",
+        "summary": "创建订单",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "订单创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "库存不足或参数错误"
+          },
+          "404": {
+            "description": "商品不存在"
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
+    },
+    "/orders/user/{userId}": {
+      "get": {
+        "operationId": "OrdersController_getUserOrders",
+        "summary": "获取用户订单列表",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "operationId": "OrdersController_findOne",
+        "summary": "获取订单详情",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "订单不存在"
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      },
+      "patch": {
+        "operationId": "OrdersController_update",
+        "summary": "更新订单",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "订单不存在"
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      },
+      "delete": {
+        "operationId": "OrdersController_remove",
+        "summary": "删除订单",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功"
+          },
+          "404": {
+            "description": "订单不存在"
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
     }
   },
   "info": {
@@ -892,6 +1313,11 @@
             "type": "string",
             "description": "所在地",
             "example": "北京市朝阳区"
+          },
+          "stock": {
+            "type": "number",
+            "description": "库存",
+            "example": 10
           }
         },
         "required": [
@@ -955,6 +1381,10 @@
             "type": "number",
             "description": "浏览次数"
           },
+          "stock": {
+            "type": "number",
+            "description": "库存"
+          },
           "created_at": {
             "format": "date-time",
             "type": "string",
@@ -973,6 +1403,7 @@
           "price",
           "status",
           "view_count",
+          "stock",
           "created_at",
           "updated_at"
         ]
@@ -1019,6 +1450,10 @@
           "location": {
             "type": "string",
             "description": "所在地"
+          },
+          "stock": {
+            "type": "number",
+            "description": "库存"
           }
         }
       },
@@ -1101,6 +1536,148 @@
           "content": {
             "type": "string",
             "description": "评论内容"
+          }
+        }
+      },
+      "CreateCartDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "number",
+            "description": "用户ID",
+            "example": 1
+          },
+          "product_id": {
+            "type": "number",
+            "description": "商品ID",
+            "example": 1
+          },
+          "quantity": {
+            "type": "number",
+            "description": "数量",
+            "example": 1
+          }
+        },
+        "required": [
+          "user_id",
+          "product_id"
+        ]
+      },
+      "Cart": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "description": "购物车ID"
+          },
+          "user_id": {
+            "type": "number",
+            "description": "用户ID"
+          },
+          "product_id": {
+            "type": "number",
+            "description": "商品ID"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "数量"
+          },
+          "selected": {
+            "type": "boolean",
+            "description": "是否选中"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "创建时间"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string",
+            "description": "更新时间"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "product_id",
+          "quantity",
+          "selected",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateCartDto": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "number",
+            "description": "数量",
+            "example": 2
+          },
+          "selected": {
+            "type": "boolean",
+            "description": "是否选中",
+            "example": true
+          }
+        }
+      },
+      "CreateOrderDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "number",
+            "description": "用户ID"
+          },
+          "product_id": {
+            "type": "number",
+            "description": "商品ID"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "购买数量"
+          },
+          "shipping_address": {
+            "type": "string",
+            "description": "收货地址"
+          },
+          "payment_method": {
+            "type": "string",
+            "description": "支付方式"
+          }
+        },
+        "required": [
+          "user_id",
+          "product_id",
+          "quantity"
+        ]
+      },
+      "Order": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateOrderDto": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "number",
+            "description": "用户ID"
+          },
+          "product_id": {
+            "type": "number",
+            "description": "商品ID"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "购买数量"
+          },
+          "shipping_address": {
+            "type": "string",
+            "description": "收货地址"
+          },
+          "payment_method": {
+            "type": "string",
+            "description": "支付方式"
           }
         }
       }

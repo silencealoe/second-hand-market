@@ -61,6 +61,14 @@
         />
       </nut-form-item>
 
+      <nut-form-item prop="stock" label="库存数量">
+        <nut-input-number
+          v-model.number="formData.stock"
+          placeholder="请输入"
+          clearable
+        />
+      </nut-form-item>
+
       <nut-form-item prop="images" label="商品图片（可选，最多10张）">
         <nut-uploader
           v-model:file-list="imageList"
@@ -132,6 +140,7 @@ const formData = reactive({
   original_price: undefined as number | undefined,
   category: '',
   location: '',
+  stock: 1,
   status: 'on_sale' as ProductStatus
 })
 
@@ -142,6 +151,10 @@ const rules = {
   price: [
     { required: true, message: '请输入价格' },
     { type: 'number', min: 0.01, message: '价格必须大于0' }
+  ],
+  stock: [
+    { required: true, message: '请输入库存数量' },
+    { type: 'number', min: 1, message: '库存数量必须大于0' }
   ]
 }
 
@@ -227,6 +240,7 @@ const loadProductData = async (id: number) => {
     formData.original_price = Number(product.original_price)
     formData.category = product.category || ''
     formData.location = product.location || ''
+    formData.stock = product.stock || 1
     formData.status = product.status
     
     // 加载图片
@@ -316,6 +330,7 @@ const handleSubmit = async () => {
         original_price: Number(formData.original_price),
         category: formData.category || undefined,
         location: formData.location || undefined,
+        stock: formData.stock,
         images: uploadedImages.value.length > 0 ? uploadedImages.value : undefined,
         status: formData.status
       })
@@ -330,7 +345,8 @@ const handleSubmit = async () => {
         price: Number(formData.price),
         original_price: Number(formData.original_price),
         category: formData.category || undefined,
-        location: formData.location || undefined, 
+        location: formData.location || undefined,
+        stock: formData.stock,
         images: uploadedImages.value.length > 0 ? uploadedImages.value : undefined,
         status: formData.status
       })

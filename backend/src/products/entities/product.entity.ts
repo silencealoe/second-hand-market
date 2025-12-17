@@ -10,6 +10,8 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Comment } from '../../comments/entities/comment.entity';
+import { Cart } from '../../carts/entities/cart.entity';
+import { Order } from '../../orders/entities/order.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ProductStatus {
@@ -68,6 +70,10 @@ export class Product {
   @Column({ type: 'int', unsigned: true, default: 0 })
   view_count: number;
 
+  @ApiProperty({ description: '库存' })
+  @Column({ type: 'int', unsigned: true, default: 1 })
+  stock: number;
+
   @ApiProperty({ description: '创建时间' })
   @CreateDateColumn()
   created_at: Date;
@@ -82,5 +88,11 @@ export class Product {
 
   @OneToMany(() => Comment, (comment) => comment.product)
   comments: Comment[];
+
+  @OneToMany(() => Cart, (cart) => cart.product)
+  carts: Cart[];
+
+  @OneToMany(() => Order, (order) => order.product)
+  orders: Order[];
 }
 
