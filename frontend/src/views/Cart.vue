@@ -76,6 +76,8 @@ import { useRouter } from 'vue-router'
 import { IconFont as NutIcon } from '@nutui/icons-vue'
 import { InputNumber as NutStepper, Button as NutButton, showToast, showDialog } from '@nutui/nutui'
 import { cartState, isLoading, hasUnsavedChanges, updateQuantity, removeFromCart, fetchCartList, getTotalCount, getTotalPrice, submitCartChanges } from '@/utils/cart'
+import { createOrderAPI } from '@/api/orders'
+import { getUser } from '@/utils/auth'
 
 const router = useRouter()
 
@@ -109,9 +111,14 @@ const goToDetail = (id: number) => {
   router.push(`/product/${id}`)
 }
 
-// 处理数量变化
-const handleQuantityChange = (itemId: number, newQuantity: number) => {
-  updateQuantity(itemId, newQuantity)
+// 处理数量变化（确保为数字类型）
+const handleQuantityChange = (itemId: number, newQuantity: number | string) => {
+  const quantityNumber = Number(newQuantity)
+  if (Number.isNaN(quantityNumber) || quantityNumber < 1) {
+    showToast.fail('数量格式不正确')
+    return
+  }
+  updateQuantity(itemId, quantityNumber)
 }
 
 // 删除单个商品
@@ -144,15 +151,52 @@ const handleCheckout = async () => {
     showToast.fail('购物车为空，无法结算')
     return
   }
-  
-  // 如果有未保存的更改，先提交
-  if (hasUnsavedChanges.value) {
-    const success = await submitCartChanges()
-    if (!success) return
+
+  const user = getUser()
+  if (!user) {
+    showToast.fail('请先登录')
+    router.push('/login')
+    return
   }
-  
-  // 显示结算成功消息
-  showToast.success('购物车已更新，结算功能开发中')
+
+  // 确认结算
+  showDialog({
+    title: '确认结算',
+    content: `确定要结算这 ${totalCount.value} 件商品吗？`,
+    onOk: async () => {
+      // 如果有未保存的更改，先提交到后端
+      if (hasUnsavedChanges.value) {
+        const success = await submitCartChanges()
+        if (!success) return
+      }
+
+      try {
+        isLoading.value = true
+        // 按当前购物车中的商品逐个创建订单
+        for (const item of cartState.items) {
+          await createOrderAPI({
+            user_id: user.id,
+            product_id: item.product.id,
+            quantity: Number(item.quantity),
+            shipping_address: user.address || '',
+            payment_method: '微信支付'
+          })
+        }
+
+        showToast.success('结算成功，订单已生成')
+        // 后端在创建订单时会删除对应购物车记录，这里重新拉取购物车列表
+        await fetchCartList()
+        // 跳转到订单页查看
+        router.push('/orders')
+      } catch (error: any) {
+        console.error('结算失败:', error)
+        const errorMessage = error.response?.data?.message || '结算失败，请重试'
+        showToast.fail(errorMessage)
+      } finally {
+        isLoading.value = false
+      }
+    }
+  })
 }
 </script>
 

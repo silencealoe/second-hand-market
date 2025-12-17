@@ -41,8 +41,11 @@
         </div>
         <h2 class="title">{{ product.title }}</h2>
         <div class="meta-info">
-          <span class="status" :class="product.status">
-            {{ statusText[product.status] }}
+          <span
+            class="status"
+            :class="product.stock > 0 ? 'on_sale' : 'sold'"
+          >
+            {{ product.stock > 0 ? '在售' : '已售罄' }}
           </span>
           <span class="views">浏览 {{ product.view_count }}</span>
         </div>
@@ -74,8 +77,8 @@
         </div>
       </div>
 
-      <!-- 购买按钮 -->
-<div v-if="product.status === 'on_sale'" class="buy-section">
+      <!-- 购买按钮：仅当有库存时显示 -->
+      <div v-if="product.stock > 0" class="buy-section">
   <nut-button type="primary" block size="large" @click="handleBuy">
     立即购买
   </nut-button>
@@ -153,11 +156,7 @@ const commentContent = ref('')
 const submittingComment = ref(false)
 const buying = ref(false)
 
-const statusText = {
-  on_sale: '在售',
-  sold: '已售',
-  off_shelf: '已下架'
-}
+// 商品状态文案改为完全依赖库存的显示（>0 在售，=0 已售罄）
 
 // 判断是否是商品发布人
 const isProductOwner = (userId: number) => {

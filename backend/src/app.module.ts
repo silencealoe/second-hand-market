@@ -23,7 +23,8 @@ import { Order } from './orders/entities/order.entity';
       host: process.env.DB_HOST || 'localhost',
       port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
       username: process.env.DB_USERNAME || 'root',
-      password: 'root12345',
+      // password: 'root12345',
+      password: process.env.DB_PASSWORD || '',
       database: process.env.DB_DATABASE || 'second_hand_market',
       entities: [User, Product, Comment, Cart, Order],
       synchronize: true, // 开发环境设为 true 自动创建表

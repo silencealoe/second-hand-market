@@ -106,11 +106,11 @@
             :src="product.images && product.images.length > 0 ? product.images[0] : '/placeholder.png'"
             :alt="product.title"
             class="product-image"
-            :class="{ 'sold-image': product.status === 'sold' }"
+            :class="{ 'sold-image': product.stock === 0 }"
             @error="handleImageError"
           />
-          <div v-if="product.status === 'sold'" class="sold-overlay"></div>
-          <div v-if="product.status === 'sold'" class="sold-badge">卖掉了</div>
+          <div v-if="product.stock === 0" class="sold-overlay"></div>
+          <div v-if="product.stock === 0" class="sold-badge">卖掉了</div>
         </div>
         <div class="product-info">
           <h3 class="product-title">{{ product.title }}</h3>
@@ -124,7 +124,7 @@
         <span class="location">{{ product.location || '未知地区' }}</span>
         <span class="views">浏览 {{ product.view_count }}</span>
       </div>
-      <div class="product-stock" v-if="product.status === 'on_sale'">
+      <div class="product-stock">
         <span :class="{ 'stock-available': product.stock > 0, 'stock-unavailable': product.stock === 0 }">
           {{ product.stock > 0 ? `库存: ${product.stock}` : '已售罄' }}
         </span>
@@ -160,8 +160,6 @@ import { showToast } from '@nutui/nutui'
 import { addToCart } from '@/utils/cart'
 
 const router = useRouter()
-const gridRef = ref<HTMLElement>()
-
 const products = ref<Product[]>([])
 const loading = ref(false)
 const hasMore = ref(true)
@@ -323,23 +321,7 @@ const handleBack = () => {
   router.back()
 }
 
-// 添加商品到购物车
-const handleAddToCart = (e: Event, product: Product) => {
-  // 阻止事件冒泡，避免触发商品详情跳转
-  e.stopPropagation()
-  
-  if (product.stock <= 0) {
-    showToast('商品已售罄')
-    return
-  }
-  
-  const success = addToCart(product)
-  if (success) {
-    showToast.success('已添加到购物车')
-  } else {
-    showToast('库存不足')
-  }
-}
+// （保留占位，如后续需要从列表直接加入购物车，可以在此实现）
 
 // 初始化加载
 loadMore()

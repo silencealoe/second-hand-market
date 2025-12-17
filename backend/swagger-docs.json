@@ -98,7 +98,7 @@
     },
     "/users/{id}": {
       "get": {
-        "operationId": "UsersController_findOne", 
+        "operationId": "UsersController_findOne",
         "summary": "根据ID获取用户信息",
         "parameters": [
           {
