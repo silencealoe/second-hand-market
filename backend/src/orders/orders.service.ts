@@ -96,11 +96,11 @@ export class OrdersService {
 
   // 获取用户订单列表
   async getUserOrders(userId: number) {
-    return await this.orderRepository.find({
-      where: { user_id: userId },
-      relations: ['product'],
-      order: { created_at: 'DESC' }
-    })
+    return await this.orderRepository.createQueryBuilder('order')
+      .leftJoinAndSelect('order.product', 'product')
+      .where('order.user_id = :userId', { userId })
+      .orderBy('order.created_at', 'DESC')
+      .getMany()
   }
 
   // 获取订单详情

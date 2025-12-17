@@ -107,6 +107,7 @@ export interface Order {
   order_number: string
   user_id: number
   product_id: number
+  product?: Product
   quantity: number
   unit_price: number
   total_price: number

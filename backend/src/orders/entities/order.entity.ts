@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm'
 import { User } from '../../users/entities/user.entity'
 import { Product } from '../../products/entities/product.entity'
 
@@ -16,10 +16,11 @@ export class Order {
   @Column()
   user_id: number
 
-  @ManyToOne(() => Product, product => product.orders)
+  @ManyToOne(() => Product, product => product.orders, { eager: true })
+  @JoinColumn({ name: 'product_id' })
   product: Product
 
-  @Column()
+  @Column({ type: 'int', unsigned: true })
   product_id: number
 
   @Column()

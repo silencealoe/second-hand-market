@@ -2,13 +2,7 @@
   <div class="orders-container">
     <nut-navbar title="我的订单" left-show @click-back="handleBack">
     </nut-navbar>
-    
-    <div class="brand-banner">
-      <div class="brand-content">
-        <h1 class="brand-name">闲余</h1>
-        <p class="brand-slogan">你的闲余，他人的刚需</p>
-      </div>
-    </div>
+
 
     <div v-if="!isAuthenticated" class="not-login">
       <div class="login-prompt">
@@ -38,37 +32,42 @@
             :key="order.id"
             class="order-item"
           >
-            <template #title>
+            <!-- <template #title>
               <div class="order-header">
                 <span class="order-number">订单号: {{ order.order_number }}</span>
                 <span class="order-status" :class="order.status">
                   {{ getStatusText(order.status) }}
                 </span>
               </div>
-            </template>
+            </template> -->
             
-            <template #description>
-              <div class="order-info">
-                <div class="order-product">
-                  <div class="product-thumb">
-                    <img
-                      :src="order.product?.images?.[0] || '/placeholder.png'"
+            <template #desc>
+              <div class="order-content">
+                <!-- 商品信息 -->
+                <div class="product-section">
+                  <div class="product-image">
+                    <img 
+                      :src="order.product?.images?.[0] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+5Zu+54mH5pyq5Yqg6L29PC90ZXh0Pjwvc3ZnPg=='" 
                       :alt="order.product?.title || '商品图片'"
                       @error="handleImageError"
                     />
                   </div>
-                  <div class="product-detail">
-                    <div class="product-info">
-                      <span class="product-name">{{ order.product?.title || '商品信息加载中' }}</span>
-                      <span class="quantity">x{{ order.quantity }}</span>
-                    </div>
-                    <div class="price-info">
-                      <span class="unit-price">单价: ¥{{ order.unit_price }}</span>
-                      <span class="total-price">总价: ¥{{ order.total_price }}</span>
-                    </div>
-                    <div class="order-time">
-                      下单时间: {{ formatDate(order.created_at) }}
-                    </div>
+                  <div class="product-details">
+                    <div class="product-name">{{ order.product?.title || '商品信息加载中' }}</div>
+                    <!-- <div class="product-price">¥{{ order.unit_price }}</div> -->
+                    <div class="product-quantity">数量: x{{ order.quantity }}</div>
+                  </div>
+                </div>
+                
+                <!-- 订单信息 -->
+                <div class="order-summary">
+                  <div class="order-meta">
+                    <div class="order-number">订单号: {{ order.order_number }}</div>
+                    <div class="order-time">下单时间: {{ formatDate(order.created_at) }}</div>
+                  </div>
+                  <div class="order-total">
+                    <span class="total-label">成交总价:</span>
+                    <span class="total-value">¥{{ order.total_price }}</span>
                   </div>
                 </div>
               </div>
@@ -91,10 +90,7 @@ import { Order as OrderIcon } from '@nutui/icons-vue'
 
 const router = useRouter()
 
-// 后端返回的订单包含 product 关联信息，这里在类型上做一个扩展
-type OrderWithRelations = Order & { product?: Product }
-
-const orders = ref<OrderWithRelations[]>([])
+const orders = ref<Order[]>([])
 const loading = ref(true)
 
 const isAuthenticated = computed(() => checkAuth())
@@ -121,7 +117,8 @@ const loadOrders = async () => {
   try {
     const res = await getUserOrdersAPI(user.id)
     // 接口直接返回订单数组，因此不再从 data 字段取值
-    orders.value = (res as unknown as OrderWithRelations[]) || []
+    console.log('Orders response:', res)
+    orders.value = res || []
   } catch (error) {
     console.error('加载订单失败:', error)
     showToast.fail('加载订单失败')
@@ -138,19 +135,14 @@ const handleImageError = (e: Event) => {
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-  if (days === 0) {
-    return '今天'
-  } else if (days === 1) {
-    return '昨天'
-  } else if (days < 7) {
-    return `${days}天前`
-  } else {
-    return date.toLocaleDateString('zh-CN')
-  }
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
 }
 
 const goToLogin = () => {
@@ -266,7 +258,10 @@ onMounted(() => {
 }
 
 .order-item {
-  margin-bottom: 10px;
+  margin: 15px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .order-header {
@@ -312,47 +307,102 @@ onMounted(() => {
   color: #721c24;
 }
 
-.order-info {
-  padding-left: 0;
+.order-content {
+  padding: 10px 0;
 }
 
-.product-info {
+/* 商品信息样式 */
+.product-section {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  margin-right: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-details {
+  flex: 1;
+  min-width: 0;
 }
 
 .product-name {
   font-size: 14px;
+  font-weight: 500;
   color: #333;
-  flex: 1;
-  margin-right: 10px;
+  margin-bottom: 5px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.quantity {
+.product-price {
+  font-size: 16px;
+  font-weight: bold;
+  color: #e74c3c;
+  margin-bottom: 5px;
+}
+
+.product-quantity {
   font-size: 12px;
   color: #999;
 }
 
-.price-info {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
+/* 订单信息样式 */
+.order-summary {
+  padding-top: 15px;
 }
 
-.unit-price, .total-price {
+.order-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.order-meta .order-number {
   font-size: 12px;
   color: #666;
 }
 
-.total-price {
-  font-weight: bold;
-  color: #e74c3c;
-}
-
-.order-time {
+.order-meta .order-time {
   font-size: 12px;
   color: #999;
+}
+
+.order-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+}
+
+.total-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.total-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #e74c3c;
 }
 </style>

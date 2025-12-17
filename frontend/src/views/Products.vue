@@ -110,7 +110,7 @@
             @error="handleImageError"
           />
           <div v-if="product.stock === 0" class="sold-overlay"></div>
-          <div v-if="product.stock === 0" class="sold-badge">卖掉了</div>
+          <div v-if="product.stock === 0" class="sold-badge">卖光了</div>
         </div>
         <div class="product-info">
           <h3 class="product-title">{{ product.title }}</h3>
