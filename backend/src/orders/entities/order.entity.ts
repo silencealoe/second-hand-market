@@ -55,4 +55,7 @@ export class Order {
 
   @Column({ nullable: true })
   completed_at: Date
+
+  @Column({ nullable: true })
+  cancelled_at: Date
 }

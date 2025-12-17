@@ -32,14 +32,6 @@
             :key="order.id"
             class="order-item"
           >
-            <!-- <template #title>
-              <div class="order-header">
-                <span class="order-number">订单号: {{ order.order_number }}</span>
-                <span class="order-status" :class="order.status">
-                  {{ getStatusText(order.status) }}
-                </span>
-              </div>
-            </template> -->
             
             <template #desc>
               <div class="order-content">
@@ -54,7 +46,7 @@
                   </div>
                   <div class="product-details">
                     <div class="product-name">{{ order.product?.title || '商品信息加载中' }}</div>
-                    <!-- <div class="product-price">¥{{ order.unit_price }}</div> -->
+                    <div class="product-price">¥{{ order.unit_price }}</div>
                     <div class="product-quantity">数量: x{{ order.quantity }}</div>
                   </div>
                 </div>

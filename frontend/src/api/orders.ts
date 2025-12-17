@@ -33,3 +33,18 @@ export const updateOrderAPI = (id: number, data: Partial<Order>) => {
 export const deleteOrderAPI = (id: number) => {
   return request.delete(`/orders/${id}`)
 }
+
+// 取消订单
+export const cancelOrderAPI = (id: number) => {
+  return request.patch<Order>(`/orders/${id}/cancel`, {})
+}
+
+// 确认支付
+export const confirmPaymentAPI = (id: number) => {
+  return request.patch<Order>(`/orders/${id}/confirm-payment`, {})
+}
+
+// 支付宝支付
+export const alipayPaymentAPI = (id: number) => {
+  return request.get<string>(`/orders/${id}/alipay`, { responseType: 'text' })
+}

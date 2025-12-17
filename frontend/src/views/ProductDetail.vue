@@ -279,30 +279,22 @@ const confirmBuy = async () => {
 
   buying.value = true
   try {
-    // 使用订单API创建订单（包含事务处理：生成订单、扣减库存、删除购物车）
+    // 创建待付款订单（不立即完成购买）
     const order = await createOrderAPI({
       user_id: user.id,
       product_id: product.value.id,
       quantity: 1,
       shipping_address: user.address || '',
-      payment_method: '微信支付'
+      payment_method: '支付宝'
     })
     
-    showToast.success('购买成功！订单已生成')
+    showToast.success('订单已生成')
     
-    // 更新商品状态为已售
-    await updateProduct(product.value.id, {
-      status: 'sold'
-    })
-    
-    // 更新商品状态
-    product.value.status = 'sold'
-    
-    // 跳转到订单页面
-    router.push('/orders')
+    // 跳转到订单确认页面
+    router.push({ name: 'OrderConfirmation', params: { id: order.id } })
   } catch (error: any) {
-    console.error('购买失败:', error)
-    const errorMessage = error.response?.data?.message || '购买失败，请重试'
+    console.error('创建订单失败:', error)
+    const errorMessage = error.response?.data?.message || '创建订单失败，请重试'
     showToast.fail(errorMessage)
   } finally {
     buying.value = false

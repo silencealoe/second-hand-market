@@ -1084,6 +1084,80 @@
           "订单"
         ]
       }
+    },
+    "/orders/{id}/cancel": {
+      "patch": {
+        "operationId": "OrdersController_cancelOrder",
+        "summary": "取消订单",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "订单取消成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "只有待付款的订单才能取消"
+          },
+          "404": {
+            "description": "订单不存在"
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
+    },
+    "/orders/{id}/confirm-payment": {
+      "patch": {
+        "operationId": "OrdersController_confirmPayment",
+        "summary": "确认支付",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "支付成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "只有待付款的订单才能确认支付"
+          },
+          "404": {
+            "description": "订单不存在"
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
     }
   },
   "info": {
