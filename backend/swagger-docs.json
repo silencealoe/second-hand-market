@@ -98,7 +98,7 @@
     },
     "/users/{id}": {
       "get": {
-        "operationId": "UsersController_findOne",
+        "operationId": "UsersController_findOne", 
         "summary": "根据ID获取用户信息",
         "parameters": [
           {
@@ -288,6 +288,62 @@
             "schema": {
               "example": 10,
               "type": "number"
+            }
+          },
+          {
+            "name": "title",
+            "required": false,
+            "in": "query",
+            "description": "商品标题搜索（模糊匹配）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "min_price",
+            "required": false,
+            "in": "query",
+            "description": "最低价格",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "max_price",
+            "required": false,
+            "in": "query",
+            "description": "最高价格",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "location",
+            "required": false,
+            "in": "query",
+            "description": "所在地筛选（模糊匹配）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_by",
+            "required": false,
+            "in": "query",
+            "description": "排序字段：price, created_at, view_count",
+            "schema": {
+              "example": "created_at",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_order",
+            "required": false,
+            "in": "query",
+            "description": "排序方式：ASC, DESC",
+            "schema": {
+              "example": "DESC",
+              "type": "string"
             }
           }
         ],

@@ -223,8 +223,8 @@ const loadProductData = async (id: number) => {
     
     formData.title = product.title
     formData.description = product.description || ''
-    formData.price = product.price
-    formData.original_price = product.original_price
+    formData.price = Number(product.price)
+    formData.original_price = Number(product.original_price)
     formData.category = product.category || ''
     formData.location = product.location || ''
     formData.status = product.status
@@ -302,18 +302,18 @@ const handleSubmit = async () => {
       })
       .filter(Boolean) as string[]
 
-    // 更新 uploadedImages
-    if (images.length > 0) {
-      uploadedImages.value = images
-    }
-
+    // // 更新 uploadedImages
+    // if (images.length > 0) {
+    //   uploadedImages.value = images
+    // }
+    // debugger
     if (isEditMode.value && productId.value) {
       // 编辑模式
       await updateProduct(productId.value, {
         title: formData.title,
         description: formData.description || undefined,
-        price: formData.price,
-        original_price: formData.original_price,
+        price: Number(formData.price),
+        original_price: Number(formData.original_price),
         category: formData.category || undefined,
         location: formData.location || undefined,
         images: uploadedImages.value.length > 0 ? uploadedImages.value : undefined,
@@ -327,10 +327,10 @@ const handleSubmit = async () => {
         user_id: user.id,
         title: formData.title,
         description: formData.description || undefined,
-        price: formData.price,
-        original_price: formData.original_price,
+        price: Number(formData.price),
+        original_price: Number(formData.original_price),
         category: formData.category || undefined,
-        location: formData.location || undefined,
+        location: formData.location || undefined, 
         images: uploadedImages.value.length > 0 ? uploadedImages.value : undefined,
         status: formData.status
       })

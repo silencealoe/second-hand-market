@@ -23,6 +23,12 @@ export class ProductsService {
     userId?: number,
     page: number = 1,
     limit: number = 10,
+    title?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    location?: string,
+    sortBy?: string,
+    sortOrder?: 'ASC' | 'DESC',
   ): Promise<{ data: Product[]; total: number; page: number; limit: number; totalPages: number }> {
     const queryBuilder = this.productsRepository
       .createQueryBuilder('product')
@@ -46,19 +52,52 @@ export class ProductsService {
         'user.avatar',
       ]);
 
+    // 状态筛选
     if (status) {
       queryBuilder.where('product.status = :status', { status });
     }
 
+    // 分类筛选
     if (category) {
-      queryBuilder.andWhere('product.category = :category', { category });
+      if (status) {
+        queryBuilder.andWhere('product.category = :category', { category });
+      } else {
+        queryBuilder.where('product.category = :category', { category });
+      }
     }
 
+    // 用户ID筛选
     if (userId) {
-      queryBuilder.andWhere('product.user_id = :userId', { userId });
+      const whereCondition = status || category ? 'andWhere' : 'where';
+      queryBuilder[whereCondition]('product.user_id = :userId', { userId });
     }
 
-    queryBuilder.orderBy('product.created_at', 'DESC');
+    // 标题搜索（模糊匹配）
+    if (title) {
+      const whereCondition = status || category || userId ? 'andWhere' : 'where';
+      queryBuilder[whereCondition]('product.title LIKE :title', { title: `%${title}%` });
+    }
+
+    // 价格范围筛选
+    if (minPrice !== undefined) {
+      const whereCondition = status || category || userId || title ? 'andWhere' : 'where';
+      queryBuilder[whereCondition]('product.price >= :minPrice', { minPrice });
+    }
+    if (maxPrice !== undefined) {
+      const whereCondition = status || category || userId || title || minPrice !== undefined ? 'andWhere' : 'where';
+      queryBuilder[whereCondition]('product.price <= :maxPrice', { maxPrice });
+    }
+
+    // 所在地筛选
+    if (location) {
+      const whereCondition = status || category || userId || title || minPrice !== undefined || maxPrice !== undefined ? 'andWhere' : 'where';
+      queryBuilder[whereCondition]('product.location LIKE :location', { location: `%${location}%` });
+    }
+
+    // 排序
+    const sortField = sortBy || 'created_at';
+    const order = sortOrder || 'DESC';
+    queryBuilder.orderBy(`product.${sortField}`, order);
 
     // 获取总数
     const total = await queryBuilder.getCount();

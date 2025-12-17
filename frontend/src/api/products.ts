@@ -13,6 +13,12 @@ export const getProducts = (params?: {
   user_id?: string
   page?: number
   limit?: number
+  title?: string
+  min_price?: number
+  max_price?: number
+  location?: string
+  sort_by?: string
+  sort_order?: 'ASC' | 'DESC'
 }) => {
   return request.get<{
     data: Product[]

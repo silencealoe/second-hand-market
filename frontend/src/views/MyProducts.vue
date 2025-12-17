@@ -10,6 +10,82 @@
       </div>
     </div>
 
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+      <nut-input
+        v-model="searchTitle"
+        placeholder="搜索商品名称..."
+        clearable
+        @clear="handleClearSearch"
+      >
+        <template #right>
+          <nut-button type="primary" size="small" @click="handleSearch">搜索</nut-button>
+        </template>
+      </nut-input>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-toggle" @click="showFilterPanel = !showFilterPanel">
+        <nut-icon name="filter" />
+        <span>筛选</span>
+      </div>
+    </div>
+
+    <!-- 筛选面板 -->
+    <div v-if="showFilterPanel" class="filter-panel">
+      <div class="filter-item">
+        <label>分类：</label>
+        <nut-input
+          v-model="filterCategory"
+          placeholder="输入分类"
+          clearable
+        />
+      </div>
+      <div class="filter-item">
+        <label>价格范围：</label>
+        <div class="price-range">
+          <nut-input
+            v-model.number="filterMinPrice"
+            type="number"
+            placeholder="最低价"
+            clearable
+          />
+          <span>-</span>
+          <nut-input
+            v-model.number="filterMaxPrice"
+            type="number"
+            placeholder="最高价"
+            clearable
+          />
+        </div>
+      </div>
+      <div class="filter-item">
+        <label>所在地：</label>
+        <nut-input
+          v-model="filterLocation"
+          placeholder="输入所在地"
+          clearable
+        />
+      </div>
+      <div class="filter-item">
+        <label>排序方式：</label>
+        <nut-radio-group v-model="sortBy">
+          <nut-radio label="发布时间" value="created_at" />
+          <nut-radio label="价格" value="price" />
+          <nut-radio label="浏览量" value="view_count" />
+        </nut-radio-group>
+        <nut-radio-group v-model="sortOrder" style="margin-top: 10px;">
+          <nut-radio label="降序" value="DESC" />
+          <nut-radio label="升序" value="ASC" />
+        </nut-radio-group>
+      </div>
+      <div class="filter-actions">
+        <nut-button type="primary" size="small" @click="applyFilters">应用筛选</nut-button>
+        <nut-button size="small" @click="resetFilters">重置</nut-button>
+      </div>
+    </div>
+
     <div v-if="loading && products.length === 0" class="loading">
       <nut-loading type="spinner" />
     </div>
@@ -86,7 +162,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getProducts, deleteProduct, updateProduct } from '@/api/products'
+import { getProducts, deleteProduct } from '@/api/products'
 import { getUser } from '@/utils/auth'
 import { showToast, showDialog } from '@nutui/nutui'
 import type { Product, ProductStatus } from '@/types'
@@ -98,11 +174,69 @@ const loading = ref(false)
 const hasMore = ref(true)
 const page = ref(1)
 const limit = ref(10)
+const showFilterPanel = ref(false)
+
+// 搜索和筛选参数
+const searchTitle = ref('')
+const filterCategory = ref('')
+const filterMinPrice = ref<number | undefined>(undefined)
+const filterMaxPrice = ref<number | undefined>(undefined)
+const filterLocation = ref('')
+const sortBy = ref('created_at')
+const sortOrder = ref<'ASC' | 'DESC'>('DESC')
 
 const statusText: Record<ProductStatus, string> = {
   on_sale: '在售',
   sold: '已售',
   off_shelf: '已下架'
+}
+
+const buildParams = () => {
+  const user = getUser()
+  if (!user) return null
+
+  const params: any = {
+    user_id: String(user.id),
+    page: page.value,
+    limit: limit.value
+  }
+  
+  if (searchTitle.value.trim()) {
+    params.title = searchTitle.value.trim()
+  }
+  
+  if (filterCategory.value.trim()) {
+    params.category = filterCategory.value.trim()
+  }
+  
+  // 确保价格参数是有效的数字
+  if (filterMinPrice.value !== undefined && filterMinPrice.value !== null) {
+    const minPrice = Number(filterMinPrice.value)
+    if (!isNaN(minPrice) && minPrice >= 0) {
+      params.min_price = minPrice
+    }
+  }
+  
+  if (filterMaxPrice.value !== undefined && filterMaxPrice.value !== null) {
+    const maxPrice = Number(filterMaxPrice.value)
+    if (!isNaN(maxPrice) && maxPrice >= 0) {
+      params.max_price = maxPrice
+    }
+  }
+  
+  if (filterLocation.value.trim()) {
+    params.location = filterLocation.value.trim()
+  }
+  
+  if (sortBy.value) {
+    params.sort_by = sortBy.value
+  }
+  
+  if (sortOrder.value) {
+    params.sort_order = sortOrder.value
+  }
+  
+  return params
 }
 
 const loadMore = async () => {
@@ -117,11 +251,10 @@ const loadMore = async () => {
 
   loading.value = true
   try {
-    const res = (await getProducts({
-      user_id: String(user.id),
-      page: page.value,
-      limit: limit.value
-    })) as unknown as {
+    const params = buildParams()
+    if (!params) return
+
+    const res = (await getProducts(params)) as unknown as {
       data: Product[]
       total: number
       page: number
@@ -150,6 +283,39 @@ const loadMore = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleSearch = () => {
+  products.value = []
+  page.value = 1
+  hasMore.value = true
+  loadMore()
+}
+
+const handleClearSearch = () => {
+  searchTitle.value = ''
+  products.value = []
+  page.value = 1
+  hasMore.value = true
+  loadMore()
+}
+
+const applyFilters = () => {
+  showFilterPanel.value = false
+  products.value = []
+  page.value = 1
+  hasMore.value = true
+  loadMore()
+}
+
+const resetFilters = () => {
+  filterCategory.value = ''
+  filterMinPrice.value = undefined
+  filterMaxPrice.value = undefined
+  filterLocation.value = ''
+  sortBy.value = 'created_at'
+  sortOrder.value = 'DESC'
+  applyFilters()
 }
 
 const handleEdit = (product: Product) => {
@@ -235,6 +401,74 @@ onMounted(() => {
   margin: 0;
   opacity: 0.95;
   font-weight: 300;
+}
+
+.search-bar {
+  background: white;
+  padding: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 11;
+}
+
+.filter-bar {
+  background: white;
+  position: sticky;
+  top: 56px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 15px;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+}
+
+.filter-panel {
+  background: white;
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-item {
+  margin-bottom: 15px;
+}
+
+.filter-item:last-of-type {
+  margin-bottom: 20px;
+}
+
+.filter-item label {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.price-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.price-range span {
+  color: #999;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 .loading {
