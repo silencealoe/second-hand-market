@@ -7,6 +7,9 @@
 - ✅ 用户管理（注册、查询、更新、删除）
 - ✅ 商品管理（创建、查询、更新、删除、状态管理）
 - ✅ 评论系统（支持评论和回复）
+- ✅ 购物车功能
+- ✅ 订单管理
+- ✅ 支付宝支付集成
 - ✅ RESTful API 设计
 - ✅ Swagger API 文档
 - ✅ TypeORM 数据库 ORM
@@ -54,17 +57,35 @@ mysql -u root -p second_hand_market < database/schema.sql
 
 ### 3. 配置环境变量
 
-在项目根目录创建 `.env` 文件（参考 `.env.example`）：
+在项目根目录创建 `.env` 文件，参考以下配置：
 
 ```env
+# 服务器配置
+PORT=3000
+BASE_URL=http://localhost:3000
+
+# 数据库配置
 DB_HOST=localhost
 DB_PORT=3306
 DB_USERNAME=root
 DB_PASSWORD=your_password
 DB_DATABASE=second_hand_market
 
-PORT=3000
+# JWT 配置
+JWT_SECRET=your-secret-key-change-in-production
+JWT_EXPIRES_IN=7d
+
+# 支付宝支付配置（可选，如需使用支付功能请配置）
+ALIPAY_APP_ID=your_alipay_app_id
+ALIPAY_GATEWAY=https://openapi.alipaydev.com/gateway.do
+ALIPAY_PRIVATE_KEY=your_rsa2_private_key
+ALIPAY_PUBLIC_KEY=your_alipay_public_key
+ALIPAY_SIGN_TYPE=RSA2
+ALIPAY_NOTIFY_URL=http://localhost:3000/orders/alipay/notify
+ALIPAY_RETURN_URL=http://localhost:3000/orders/alipay/return
 ```
+
+**详细配置说明请参考**：[支付宝配置文档](./ALIPAY_CONFIG.md)
 
 ### 4. 启动服务
 
@@ -119,6 +140,25 @@ http://localhost:3000/api
 - `GET /comments/:id` - 获取评论详情
 - `PATCH /comments/:id` - 更新评论
 - `DELETE /comments/:id` - 删除评论
+
+### 购物车接口 (Carts)
+
+- `POST /carts` - 添加商品到购物车
+- `GET /carts/user/:userId` - 获取用户购物车
+- `PATCH /carts/:id` - 更新购物车商品数量
+- `DELETE /carts/:id` - 删除购物车商品
+
+### 订单接口 (Orders)
+
+- `POST /orders` - 创建订单
+- `GET /orders/user/:userId` - 获取用户订单列表
+- `GET /orders/:id` - 获取订单详情
+- `PATCH /orders/:id` - 更新订单
+- `PATCH /orders/:id/cancel` - 取消订单
+- `PATCH /orders/:id/confirm-payment` - 确认支付
+- `GET /orders/:id/alipay` - 生成支付宝支付表单
+- `POST /orders/alipay/notify` - 支付宝异步通知
+- `GET /orders/alipay/return` - 支付宝同步返回
 
 ## 项目结构
 

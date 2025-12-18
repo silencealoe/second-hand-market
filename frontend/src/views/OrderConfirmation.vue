@@ -3,12 +3,12 @@
     <nut-navbar title="订单确认" left-show @click-back="handleBack">
     </nut-navbar>
     
-    <div class="brand-banner">
+    <!-- <div class="brand-banner">
       <div class="brand-content">
         <h1 class="brand-name">闲余</h1>
         <p class="brand-slogan">你的闲余，他人的刚需</p>
       </div>
-    </div>
+    </div> -->
 
     <div v-if="loading" class="loading">
       <nut-loading type="spinner" />
@@ -125,7 +125,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getOrderByIdAPI as getOrderById, cancelOrderAPI as cancelOrder, alipayPaymentAPI as alipayPayment } from '@/api/orders'
+import { getOrderByIdAPI as getOrderById, cancelOrderAPI as cancelOrder, alipayPaymentAPI } from '@/api/orders'
 import { showToast, showDialog } from '@nutui/nutui'
 import { getUser } from '@/utils/auth'
 import type { Order } from '@/types'
@@ -259,23 +259,35 @@ const handleConfirmPayment = async () => {
         // 调用支付宝支付接口
         const formHtml = await alipayPaymentAPI(order.value!.id)
         
-        // 创建表单并自动提交
-        const form = document.createElement('form')
-        form.innerHTML = formHtml
-        form.target = '_blank'
-        form.method = 'POST'
-        document.body.appendChild(form)
-        form.submit()
-        document.body.removeChild(form)
+        // 检查返回的HTML是否有效
+        if (!formHtml || typeof formHtml !== 'string') {
+          throw new Error('支付表单生成失败，请重试')
+        }
         
-        // 提示用户
-        showToast('正在跳转到支付宝支付页面...')
+        // 创建新窗口显示支付页面
+        const newWindow = window.open('', '_blank')
+        if (newWindow) {
+          newWindow.document.write(formHtml)
+          newWindow.document.close()
+          showToast('正在跳转到支付宝支付页面...')
+        } else {
+          // 如果弹窗被阻止，使用表单提交方式
+          const form = document.createElement('form')
+          form.innerHTML = formHtml
+          form.target = '_blank'
+          form.method = 'POST'
+          form.action = 'https://openapi.alipay.com/gateway.do'
+          document.body.appendChild(form)
+          form.submit()
+          document.body.removeChild(form)
+          showToast('正在跳转到支付宝支付页面...')
+        }
         
-        // 跳转到订单页面
-        router.push('/orders')
+        // 不立即跳转，等待用户完成支付
+        // 支付完成后会通过回调地址跳转回来
       } catch (error: any) {
         console.error('支付失败:', error)
-        const errorMessage = error.response?.data?.message || '支付失败，请重试'
+        const errorMessage = error.response?.data?.message || error.message || '支付失败，请重试'
         showToast.fail(errorMessage)
       } finally {
         paying.value = false

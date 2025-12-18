@@ -1158,6 +1158,66 @@
           "订单"
         ]
       }
+    },
+    "/orders/{id}/alipay": {
+      "get": {
+        "operationId": "OrdersController_alipayPayment",
+        "summary": "支付宝支付",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "生成支付表单成功"
+          },
+          "400": {
+            "description": "订单状态错误或支付配置错误"
+          },
+          "404": {
+            "description": "订单不存在"
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
+    },
+    "/orders/alipay/notify": {
+      "post": {
+        "operationId": "OrdersController_alipayNotify",
+        "summary": "支付宝异步通知",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
+    },
+    "/orders/alipay/return": {
+      "get": {
+        "operationId": "OrdersController_alipayReturn",
+        "summary": "支付宝同步返回",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "订单"
+        ]
+      }
     }
   },
   "info": {

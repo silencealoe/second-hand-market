@@ -73,25 +73,51 @@ export class OrdersController {
   @ApiOperation({ summary: '支付宝支付' })
   @ApiResponse({ status: 200, description: '生成支付表单成功' })
   @ApiResponse({ status: 404, description: '订单不存在' })
+  @ApiResponse({ status: 400, description: '订单状态错误或支付配置错误' })
   @Get(':id/alipay')
   async alipayPayment(@Param('id') id: string, @Res() res: Response) {
-    // 获取订单信息
-    const order = await this.ordersService.findOne(parseInt(id))
-    
-    if (!order) {
-      return res.status(404).json({ message: '订单不存在' })
+    try {
+      // 获取订单信息
+      console.log('支付宝支付请求 - 订单ID:', id);
+      const order = await this.ordersService.findOne(parseInt(id))
+      
+      if (!order) {
+        return res.status(404).json({ message: '订单不存在' })
+      }
+
+      // 检查订单状态
+      if (order.status !== 'pending') {
+        return res.status(400).json({ 
+          message: `订单状态错误，当前状态：${order.status}，只有待付款订单可以支付` 
+        })
+      }
+
+      // 记录订单信息用于调试
+      console.log('订单信息:', {
+        order_number: order.order_number,
+        total_price: order.total_price,
+        total_price_type: typeof order.total_price,
+        product_title: order.product?.title || '商品订单'
+      });
+
+      // 生成支付宝支付表单
+      const form = await this.alipayService.createPayment({
+        order_number: order.order_number,
+        total_price: order.total_price, // 可能是 number 或 string（MySQL decimal）
+        product_title: order.product?.title || '商品订单'
+      })
+
+      // 直接响应HTML表单
+      res.set('Content-Type', 'text/html; charset=utf-8')
+      res.send(form)
+    } catch (error) {
+      console.error('支付宝支付接口错误:',   error)
+      const errorMessage = error instanceof Error ? error.message : '支付接口调用失败'
+      return res.status(500).json({ 
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? error : undefined
+      })
     }
-
-    // 生成支付宝支付表单
-    const form = await this.alipayService.createPayment({
-      order_number: order.order_number,
-      total_price: order.total_price,
-      product_title: order.product?.title || '商品订单'
-    })
-
-    // 直接响应HTML表单
-    res.set('Content-Type', 'text/html; charset=utf-8')
-    res.send(form)
   }
 
   @ApiOperation({ summary: '支付宝异步通知' })
@@ -149,6 +175,6 @@ export class OrdersController {
     }
 
     // 跳转到订单列表页面
-    return res.redirect('/orders')
+    return res.redirect('http://localhost:5173/orders')
   }
 }
