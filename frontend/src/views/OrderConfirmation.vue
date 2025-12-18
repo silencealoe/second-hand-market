@@ -18,10 +18,10 @@
       <!-- 倒计时区域 -->
       <div class="countdown-section">
         <span class="countdown-label">订单有效期剩余：</span>
-        <span class="countdown-time" :class="{ warning: remainingTime < 300 }">
+        <span class="countdown-time" :class="{ warning: remainingTime <= 5 }">
           {{ formatTime(remainingTime) }}
         </span>
-        <span class="countdown-tip">请在15分钟内完成支付，超时订单将自动取消</span>
+        <span class="countdown-tip">请在15秒内完成支付，超时订单将自动取消</span>
       </div>
 
       <!-- 商品信息 -->
@@ -137,7 +137,8 @@ const order = ref<Order | null>(null)
 const loading = ref(true)
 const paying = ref(false)
 const cancelling = ref(false)
-const remainingTime = ref(900) // 15分钟 = 900秒
+// 订单有效期 15 秒（根据需求文档）
+const remainingTime = ref(15)
 const timer = ref<number | null>(null)
 const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+5Zu+54mH5pyq5Yqg6L29PC90ZXh0Pjwvc3ZnPg=='
 
@@ -173,14 +174,15 @@ const loadOrder = async () => {
   }
 
   try {
-    const data = await getOrderById(orderId)
+    // 接口实际返回的是 data，本地直接按 Order 使用
+    const data = (await getOrderById(orderId)) as unknown as Order
     order.value = data
     
-    // 计算剩余时间
-    const createdTime = new Date(data.created_at).getTime()
+    // 根据创建时间计算剩余时间（总有效期 15 秒）
+    const createdTime = new Date(data.created_at as unknown as string).getTime()
     const now = Date.now()
     const elapsed = Math.floor((now - createdTime) / 1000)
-    remainingTime.value = Math.max(0, 900 - elapsed)
+    remainingTime.value = Math.max(0, 15 - elapsed)
   } catch (error) {
     console.error('加载订单失败:', error)
     showToast.fail('加载订单失败')
@@ -209,7 +211,7 @@ const handleAutoCancel = async () => {
   
   try {
     await cancelOrder(order.value.id)
-    showToast('订单已超时自动取消')
+    showToast.success('订单已超时自动取消')
     router.push('/orders')
   } catch (error) {
     console.error('自动取消订单失败:', error)
@@ -233,7 +235,7 @@ const handleCancelOrder = async () => {
       cancelling.value = true
       try {
         await cancelOrder(order.value!.id)
-        showToast('订单已取消')
+        showToast.success('订单已取消')
         router.push('/orders')
       } catch (error: any) {
         console.error('取消订单失败:', error)
@@ -269,7 +271,7 @@ const handleConfirmPayment = async () => {
         if (newWindow) {
           newWindow.document.write(formHtml)
           newWindow.document.close()
-          showToast('正在跳转到支付宝支付页面...')
+          showToast.text('正在跳转到支付宝支付页面...')
         } else {
           // 如果弹窗被阻止，使用表单提交方式
           const form = document.createElement('form')
@@ -280,7 +282,7 @@ const handleConfirmPayment = async () => {
           document.body.appendChild(form)
           form.submit()
           document.body.removeChild(form)
-          showToast('正在跳转到支付宝支付页面...')
+          showToast.text('正在跳转到支付宝支付页面...')
         }
         
         // 不立即跳转，等待用户完成支付

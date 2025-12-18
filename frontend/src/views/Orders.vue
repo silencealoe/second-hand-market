@@ -32,9 +32,16 @@
             :key="order.id"
             class="order-item"
           >
-            
             <template #desc>
               <div class="order-content">
+                <!-- 订单头部：订单号 + 状态标签 -->
+                <div class="order-header">
+                  <div class="order-number">订单号: {{ order.order_number }}</div>
+                  <div class="order-status" :class="order.status">
+                    {{ getStatusText(order.status) }}
+                  </div>
+                </div>
+
                 <!-- 商品信息 -->
                 <div class="product-section">
                   <div class="product-image">

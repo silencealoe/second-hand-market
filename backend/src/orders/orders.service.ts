@@ -1,15 +1,22 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, DataSource, LessThan } from 'typeorm'
-import { Cron } from '@nestjs/schedule'
+import { Repository, DataSource } from 'typeorm'
 import { Order } from './entities/order.entity'
 import { CreateOrderDto } from './dto/create-order.dto'
 import { UpdateOrderDto } from './dto/update-order.dto'
 import { Product } from '../products/entities/product.entity'
 import { Cart } from '../carts/entities/cart.entity'
+import Redis from 'ioredis'
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name)
+
+  // Redis 客户端和订阅客户端（用于监听过期事件）
+  private static redisClient: Redis | null = null
+  private static redisSubscriber: Redis | null = null
+  private static redisInitialized = false
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
@@ -18,7 +25,54 @@ export class OrdersService {
     @InjectRepository(Cart)
     private readonly cartRepository: Repository<Cart>,
     private readonly dataSource: DataSource,
-  ) {}
+  ) {
+    // 初始化 Redis（只初始化一次）
+    if (!OrdersService.redisInitialized) {
+      OrdersService.redisInitialized = true
+      const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
+      try {
+        OrdersService.redisClient = new Redis(redisUrl)
+        OrdersService.redisSubscriber = new Redis(redisUrl)
+
+        // 订阅 key 过期事件（需要在 Redis 配置中开启：notify-keyspace-events Ex）
+        OrdersService.redisSubscriber.subscribe('__keyevent@0__:expired', (err) => {
+          if (err) {
+            this.logger.error('Redis 订阅过期事件失败', err)
+          } else {
+            this.logger.log('Redis 过期事件订阅成功')
+          }
+        })
+
+        OrdersService.redisSubscriber.on('message', async (_channel, key) => {
+          // 只处理订单过期键：order:expire:{id}
+          if (!key.startsWith('order:expire:')) return
+          const idStr = key.split(':')[2]
+          const id = parseInt(idStr, 10)
+          if (Number.isNaN(id)) return
+
+          this.logger.log(`收到订单过期事件，订单ID: ${id}`)
+
+          try {
+            // 调用取消订单逻辑（内部会校验状态是否为 pending）
+            await this.cancelOrder(id)
+            this.logger.log(`订单 ${id} 已因超时自动取消`)
+          } catch (error: any) {
+            // 如果订单已被手动取消或已支付，忽略状态错误
+            if (
+              error instanceof BadRequestException &&
+              error.message.includes('只有待付款的订单才能取消')
+            ) {
+              this.logger.log(`订单 ${id} 状态已变更（可能已支付或已取消），忽略过期事件`)
+            } else {
+              this.logger.error(`处理订单过期事件失败 (ID: ${id})`, error?.stack || error)
+            }
+          }
+        })
+      } catch (error) {
+        this.logger.error('初始化 Redis 客户端失败，将无法使用过期自动取消功能', error as any)
+      }
+    }
+  }
 
   // 生成订单号
   private generateOrderNumber(): string {
@@ -74,6 +128,24 @@ export class OrdersService {
       order.status = 'pending'
 
       const savedOrder = await queryRunner.manager.save(Order, order)
+
+      // 为订单创建 Redis 过期键（15 秒未支付自动取消）
+      try {
+        if (OrdersService.redisClient) {
+          const ttlSeconds = 15
+          await OrdersService.redisClient.set(
+            `order:expire:${savedOrder.id}`,
+            '1',
+            'EX',
+            ttlSeconds,
+          )
+          this.logger.log(`为订单 ${savedOrder.id} 设置 Redis 过期键，TTL=${ttlSeconds}s`)
+        } else {
+          this.logger.warn('Redis 客户端未初始化，无法设置订单过期键')
+        }
+      } catch (redisError) {
+        this.logger.error('设置订单过期 Redis 键失败', redisError as any)
+      }
 
       // 提交事务
       await queryRunner.commitTransaction()
@@ -174,6 +246,15 @@ export class OrdersService {
       order.status = 'cancelled'
       await queryRunner.manager.save(Order, order)
 
+      // 删除 Redis 过期键，避免重复触发
+      try {
+        if (OrdersService.redisClient) {
+          await OrdersService.redisClient.del(`order:expire:${order.id}`)
+        }
+      } catch (redisError) {
+        this.logger.error(`删除订单 ${order.id} 过期键失败`, redisError as any)
+      }
+
       // 提交事务
       await queryRunner.commitTransaction()
 
@@ -200,6 +281,15 @@ export class OrdersService {
     order.status = 'paid'
     order.paid_at = new Date()
 
+    // 删除 Redis 过期键，避免超时任务错误取消
+    try {
+      if (OrdersService.redisClient) {
+        await OrdersService.redisClient.del(`order:expire:${order.id}`)
+      }
+    } catch (redisError) {
+      this.logger.error(`删除订单 ${order.id} 过期键失败`, redisError as any)
+    }
+
     return await this.orderRepository.save(order)
   }
 
@@ -208,65 +298,5 @@ export class OrdersService {
     const order = await this.findOne(id)
     
     return await this.orderRepository.remove(order)
-  }
-
-  // 定时任务：自动取消15分钟内未支付的订单
-  @Cron('* * * * *') // 每分钟执行一次
-  async autoCancelExpiredOrders() {
-    let queryRunner = null
-    try {
-      queryRunner = this.dataSource.createQueryRunner()
-      await queryRunner.connect()
-      await queryRunner.startTransaction()
-
-      // 获取15分钟前创建且状态为pending的订单
-      const fifteenMinutesAgo = new Date()
-      fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15)
-
-      const expiredOrders = await queryRunner.manager.find(Order, {
-        where: {
-          status: 'pending',
-          created_at: LessThan(fifteenMinutesAgo)
-        },
-        relations: ['product']
-      })
-
-      if (expiredOrders.length > 0) {
-        for (const order of expiredOrders) {
-          try {
-            // 1. 释放库存
-            const product = await queryRunner.manager.findOne(Product, {
-              where: { id: order.product_id },
-              lock: { mode: 'pessimistic_write' }
-            })
-
-            if (product) {
-              product.stock += order.quantity
-              await queryRunner.manager.save(Product, product)
-            }
-
-            // 2. 更新订单状态为cancelled
-            order.status = 'cancelled'
-            order.cancelled_at = new Date()
-            await queryRunner.manager.save(Order, order)
-          } catch (error) {
-            console.error(`处理过期订单失败 (ID: ${order.id}):`, error)
-            // 继续处理其他订单
-          }
-        }
-      }
-
-      await queryRunner.commitTransaction()
-      console.log(`自动取消过期订单完成，共处理 ${expiredOrders.length} 个订单`)
-    } catch (error) {
-      console.error('自动取消过期订单任务执行失败:', error)
-      if (queryRunner) {
-        await queryRunner.rollbackTransaction()
-      }
-    } finally {
-      if (queryRunner) {
-        await queryRunner.release()
-      }
-    }
   }
 }
