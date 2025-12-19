@@ -31,6 +31,8 @@
             v-for="order in orders"
             :key="order.id"
             class="order-item"
+            :class="{ 'clickable': order.status === 'pending' }"
+            @click="handleOrderClick(order)"
           >
             <template #desc>
               <div class="order-content">
@@ -79,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUserOrdersAPI } from '@/api/orders'
 import { getUser, isAuthenticated as checkAuth } from '@/utils/auth'
@@ -156,11 +158,25 @@ const handleBack = () => {
   router.back()
 }
 
+const handleOrderClick = (order: Order) => {
+  // 只有待支付订单可以点击进入确认页面
+  if (order.status === 'pending') {
+    router.push(`/order-confirmation/${order.id}`)
+  }
+}
+
 onMounted(() => {
   if (isAuthenticated.value) {
     loadOrders()
   } else {
     loading.value = false
+  }
+})
+
+// 页面激活时刷新订单列表（从订单确认页面返回时）
+onActivated(() => {
+  if (isAuthenticated.value) {
+    loadOrders()
   }
 })
 </script>
@@ -261,6 +277,16 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   overflow: hidden;
+}
+
+.order-item.clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.order-item.clickable:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .order-header {

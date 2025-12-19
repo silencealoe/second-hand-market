@@ -15,13 +15,20 @@
     </div>
 
     <div v-else-if="order" class="confirmation-content">
-      <!-- 倒计时区域 -->
-      <div class="countdown-section">
+      <!-- 支付成功提示 -->
+      <div v-if="order.status === 'paid'" class="payment-success-section">
+        <div class="success-icon">✓</div>
+        <div class="success-title">支付成功</div>
+        <div class="success-desc">您的订单已支付成功，请等待发货</div>
+      </div>
+
+      <!-- 倒计时区域（仅待支付订单显示） -->
+      <div v-else-if="order.status === 'pending'" class="countdown-section">
         <span class="countdown-label">订单有效期剩余：</span>
         <span class="countdown-time" :class="{ warning: remainingTime <= 5 }">
           {{ formatTime(remainingTime) }}
         </span>
-        <span class="countdown-tip">请在15秒内完成支付，超时订单将自动取消</span>
+        <span class="countdown-tip">请在{{ order?.paymentTimeoutSeconds || 15 }}秒内完成支付，超时订单将自动取消</span>
       </div>
 
       <!-- 商品信息 -->
@@ -101,22 +108,45 @@
         <span class="total-amount">¥{{ order?.total_price || 0 }}</span>
       </div>
       <div class="button-group">
-        <nut-button 
-          type="default" 
-          block 
-          @click="handleCancelOrder"
-          :disabled="cancelling"
-        >
-          {{ cancelling ? '取消中...' : '取消订单' }}
-        </nut-button>
-        <nut-button 
-          type="primary" 
-          block 
-          @click="handleConfirmPayment"
-          :disabled="paying || remainingTime <= 0"
-        >
-          {{ paying ? '支付中...' : '确认支付' }}
-        </nut-button>
+        <!-- 已支付订单：只显示返回按钮 -->
+        <template v-if="order?.status === 'paid'">
+          <nut-button 
+            type="primary" 
+            block 
+            @click="goToOrders"
+          >
+            返回订单列表
+          </nut-button>
+        </template>
+        <!-- 待支付订单：显示取消和支付按钮 -->
+        <template v-else-if="order?.status === 'pending'">
+          <nut-button 
+            type="default" 
+            block 
+            @click="handleCancelOrder"
+            :disabled="cancelling"
+          >
+            {{ cancelling ? '取消中...' : '取消订单' }}
+          </nut-button>
+          <nut-button 
+            type="primary" 
+            block 
+            @click="handleConfirmPayment"
+            :disabled="paying || remainingTime <= 0"
+          >
+            {{ paying ? '支付中...' : '确认支付' }}
+          </nut-button>
+        </template>
+        <!-- 其他状态：显示返回按钮 -->
+        <template v-else>
+          <nut-button 
+            type="primary" 
+            block 
+            @click="goToOrders"
+          >
+            返回订单列表
+          </nut-button>
+        </template>
       </div>
     </div>
   </div>
@@ -133,11 +163,11 @@ import type { Order } from '@/types'
 const router = useRouter()
 const route = useRoute()
 
-const order = ref<Order | null>(null)
+const order = ref<(Order & { remainingPaymentSeconds?: number; paymentTimeoutSeconds?: number }) | null>(null)
 const loading = ref(true)
 const paying = ref(false)
 const cancelling = ref(false)
-// 订单有效期 15 秒（根据需求文档）
+// 订单有效期（从后端获取）
 const remainingTime = ref(15)
 const timer = ref<number | null>(null)
 const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+5Zu+54mH5pyq5Yqg6L29PC90ZXh0Pjwvc3ZnPg=='
@@ -164,6 +194,38 @@ const formatDate = (dateStr: string) => {
   })
 }
 
+// 轮询检查订单状态（支付成功后使用）
+const pollOrderStatus = async (orderId: number, maxAttempts: number = 10) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000)) // 等待1秒
+      const data = (await getOrderById(orderId)) as unknown as Order & { 
+        remainingPaymentSeconds?: number
+        paymentTimeoutSeconds?: number
+      }
+      console.log(`轮询检查订单状态 (${i + 1}/${maxAttempts}):`, data.status)
+      
+      // 更新订单数据
+      order.value = data
+      
+      if (data.status === 'paid') {
+        // 停止倒计时
+        if (timer.value) {
+          clearInterval(timer.value)
+          timer.value = null
+        }
+        remainingTime.value = 0
+        showToast.success('支付成功！')
+        return true
+      }
+    } catch (error) {
+      console.error('轮询检查订单状态失败:', error)
+    }
+  }
+  
+  return false
+}
+
 // 加载订单信息
 const loadOrder = async () => {
   const orderId = Number(route.params.id)
@@ -175,14 +237,46 @@ const loadOrder = async () => {
 
   try {
     // 接口实际返回的是 data，本地直接按 Order 使用
-    const data = (await getOrderById(orderId)) as unknown as Order
+    const data = (await getOrderById(orderId)) as unknown as Order & { 
+      remainingPaymentSeconds?: number
+      paymentTimeoutSeconds?: number
+    }
     order.value = data
+
+    console.log('data', data) 
     
-    // 根据创建时间计算剩余时间（总有效期 15 秒）
-    const createdTime = new Date(data.created_at as unknown as string).getTime()
-    const now = Date.now()
-    const elapsed = Math.floor((now - createdTime) / 1000)
-    remainingTime.value = Math.max(0, 15 - elapsed)
+    // 检查URL参数，如果支付成功但订单状态还是pending，则轮询检查
+    if (route.query.payment === 'success') {
+      if (data.status === 'paid') {
+        showToast.success('支付成功！')
+      } else if (data.status === 'pending') {
+        // 支付成功但订单状态还是pending，轮询检查订单状态
+        console.log('支付成功但订单状态还是pending，开始轮询检查...')
+        showToast.text('正在确认支付状态...')
+        const success = await pollOrderStatus(orderId, 10)
+        if (!success) {
+          showToast.fail('支付状态确认超时，请刷新页面查看')
+        }
+      }
+    }
+    
+    // 只有待支付订单才计算剩余时间
+    if (data.status === 'pending') {
+      // 使用后端返回的剩余时间，如果没有则根据创建时间计算
+      if (data.remainingPaymentSeconds !== undefined) {
+        remainingTime.value = Math.max(0, data.remainingPaymentSeconds)
+      } else {
+        // 兜底：根据创建时间计算剩余时间
+        const createdTime = new Date(data.created_at as unknown as string).getTime()
+        const now = Date.now()
+        const elapsed = Math.floor((now - createdTime) / 1000)
+        const timeoutSeconds = data.paymentTimeoutSeconds || 15
+        remainingTime.value = Math.max(0, timeoutSeconds - elapsed)
+      }
+    } else {
+      // 已支付或其他状态，不显示倒计时
+      remainingTime.value = 0
+    }
   } catch (error) {
     console.error('加载订单失败:', error)
     showToast.fail('加载订单失败')
@@ -192,8 +286,14 @@ const loadOrder = async () => {
   }
 }
 
-// 启动倒计时
+// 启动倒计时（仅待支付订单）
 const startCountdown = () => {
+  // 只有待支付订单才启动倒计时
+  console.log('adasdas', order.value?.status)
+  if (order.value?.status !== 'pending') {
+    return
+  }
+  
   timer.value = window.setInterval(() => {
     if (remainingTime.value > 0) {
       remainingTime.value--
@@ -300,17 +400,27 @@ const handleConfirmPayment = async () => {
 
 // 返回上一页
 const handleBack = () => {
-  // 禁止返回，只能取消或支付
-  showDialog({
-    title: '提示',
-    content: '您确定要离开订单确认页面吗？离开将导致订单取消。',
-    onOk: async () => {
-      if (order.value) {
-        await cancelOrder(order.value.id)
+  // 已支付的订单可以直接返回
+  if (order.value?.status === 'paid') {
+    router.back()
+    return
+  }
+  
+  // 待支付订单需要确认，离开会取消订单
+  if (order.value?.status === 'pending') {
+    showDialog({
+      title: '提示',
+      content: '您确定要离开订单确认页面吗？离开将导致订单取消。',
+      onOk: async () => {
+        if (order.value) {
+          await cancelOrder(order.value.id)
+        }
+        router.back()
       }
-      router.back()
-    }
-  })
+    })
+  } else {
+    router.back()
+  }
 }
 
 // 前往个人中心设置地址
@@ -318,8 +428,13 @@ const goToProfile = () => {
   router.push('/profile')
 }
 
-onMounted(() => {
-  loadOrder()
+// 返回订单列表
+const goToOrders = () => {
+  router.push('/orders')
+}
+
+onMounted( async () => {
+  await loadOrder()
   startCountdown()
 })
 
@@ -411,6 +526,41 @@ onUnmounted(() => {
   color: #856404;
   width: 100%;
   text-align: center;
+}
+
+/* 支付成功区域 */
+.payment-success-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px 20px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: white;
+  border-radius: 8px;
+}
+
+.success-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 15px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: bold;
+  color: white;
+}
+
+.success-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.success-desc {
+  font-size: 14px;
+  opacity: 0.9;
 }
 
 /* 通用区块样式 */

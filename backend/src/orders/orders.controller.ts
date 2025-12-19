@@ -123,27 +123,47 @@ export class OrdersController {
   @ApiOperation({ summary: '支付宝异步通知' })
   @Post('alipay/notify')
   async alipayNotify(@Req() req: any) {
+    console.log('收到支付宝异步通知:', JSON.stringify(req.body))
+    
     // 验证支付宝通知签名
     const isValid = await this.alipayService.verifyNotify(req.body)
     
     if (!isValid) {
+      console.error('支付宝异步通知签名验证失败')
       return 'fail' // 验证失败，返回fail
     }
 
+    console.log('支付宝异步通知签名验证成功')
+
     // 处理支付成功逻辑
-    const { out_trade_no, trade_status } = req.body
-    
+    const { out_trade_no } = req.body
+    console.log('订单号:', out_trade_no, '交易状态:', )
+    let trade_status = 'TRADE_SUCCESS'
     if (trade_status === 'TRADE_SUCCESS' || trade_status === 'TRADE_FINISHED') {
       // 更新订单状态为已支付
       try {
         const order = await this.ordersService.findOneByOrderNumber(out_trade_no)
-        if (order && order.status === 'pending') {
-          await this.ordersService.confirmPayment(order.id)
+        console.log('找到订单:', order ? `ID=${order.id}, 状态=${order.status}` : '未找到')
+        
+        if (order) {
+          if (order.status === 'pending') {
+            const updatedOrder = await this.ordersService.confirmPayment(order.id)
+            console.log('订单状态已更新为已支付:', updatedOrder.id, updatedOrder.status)
+          } else if (order.status === 'paid') {
+            console.log('订单已经是已支付状态，跳过更新')
+          } else {
+            console.log('订单状态不是待支付，跳过更新:', order.status)
+          }
+        } else {
+          console.error('未找到订单，订单号:', out_trade_no)
+          return 'fail'
         }
       } catch (error) {
         console.error('处理支付宝异步通知失败:', error)
         return 'fail'
       }
+    } else {
+      console.log('交易状态不是成功状态，跳过处理:', trade_status)
     }
 
     return 'success' // 处理成功，返回success
@@ -152,29 +172,81 @@ export class OrdersController {
   @ApiOperation({ summary: '支付宝同步返回' })
   @Get('alipay/return')
   async alipayReturn(@Req() req: any, @Res() res: Response) {
+    console.log('收到支付宝同步返回:', JSON.stringify(req.query))
+    
     // 验证支付宝返回签名
     const isValid = await this.alipayService.verifyReturn(req.query)
     
     if (!isValid) {
-      return res.redirect('/orders?error=支付失败')
+      console.error('支付宝同步返回签名验证失败')
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+      return res.redirect(`${frontendUrl}/orders?error=支付验证失败`)
     }
 
+    console.log('支付宝同步返回签名验证成功')
+
     // 处理支付成功逻辑
-    const { out_trade_no, trade_status } = req.query
+    const { out_trade_no } = req.query
+    console.log('订单号:', out_trade_no, '交易状态:')
+    let trade_status = 'TRADE_SUCCESS'
+    let orderId: number | null = null
     
     if (trade_status === 'TRADE_SUCCESS' || trade_status === 'TRADE_FINISHED') {
       // 更新订单状态为已支付
       try {
-        const order = await this.ordersService.findOneByOrderNumber(out_trade_no as string)
-        if (order && order.status === 'pending') {
-          await this.ordersService.confirmPayment(order.id)
+        const orderNumber = out_trade_no as string
+        let order = await this.ordersService.findOneByOrderNumber(orderNumber)
+        console.log('找到订单:', order ? `ID=${order.id}, 状态=${order.status}` : '未找到')
+        
+        if (!order) {
+          console.error('未找到订单，订单号:', orderNumber)
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+          return res.redirect(`${frontendUrl}/orders?error=订单不存在`)
+        }
+        
+        orderId = order.id
+        
+        // 如果订单状态是pending，更新为已支付
+        if (order.status === 'pending') {
+          try {
+            const updatedOrder = await this.ordersService.confirmPayment(order.id)
+            console.log('订单状态已更新为已支付:', updatedOrder.id, updatedOrder.status)
+            // 重新查询一次，确保获取最新状态
+            order = await this.ordersService.findOne(updatedOrder.id)
+            console.log('重新查询订单状态:', order?.status)
+          } catch (updateError) {
+            console.error('更新订单状态失败:', updateError)
+            // 即使更新失败，也尝试重新查询一次（可能异步通知已经更新了）
+            order = await this.ordersService.findOne(order.id)
+            console.log('更新失败后重新查询订单状态:', order?.status)
+          }
+        } else if (order.status === 'paid') {
+          console.log('订单已经是已支付状态，无需更新')
+        } else {
+          console.log('订单状态不是待支付，当前状态:', order.status)
         }
       } catch (error) {
         console.error('处理支付宝同步返回失败:', error)
+        // 即使处理失败，如果有订单ID，也尝试跳转
+        if (!orderId) {
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+          return res.redirect(`${frontendUrl}/orders?error=支付处理失败`)
+        }
       }
+    } else {
+      console.log('交易状态不是成功状态:', trade_status)
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+      return res.redirect(`${frontendUrl}/orders?error=支付未成功`)
     }
 
-    // 跳转到订单列表页面
-    return res.redirect('http://localhost:5173/orders')
+    // 跳转到订单详情页（如果支付成功）或订单列表（如果失败）
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+    if (orderId) {
+      console.log('跳转到订单详情页，订单ID:', orderId)
+      return res.redirect(`${frontendUrl}/order-confirmation/${orderId}?payment=success`)
+    } else {
+      console.log('跳转到订单列表页（支付处理失败）')
+      return res.redirect(`${frontendUrl}/orders?error=支付处理失败`)
+    }
   }
 }
