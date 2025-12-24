@@ -10,11 +10,13 @@ import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestj
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('upload')
 @Controller('upload')
 export class UploadController {
   @Post('images')
+  @Public()
   @UseInterceptors(
     FilesInterceptor('images', 10, {
       storage: diskStorage({

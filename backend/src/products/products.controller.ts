@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,16 +23,20 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product, ProductStatus } from './entities/product.entity';
+import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
+import { CustomValidationPipe } from '../common/pipes/custom-validation.pipe';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('products')
 @Controller('products')
+@UseInterceptors(LoggingInterceptor)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   @ApiOperation({ summary: '创建商品' })
   @ApiResponse({ status: 201, description: '商品创建成功', type: Product })
-  create(@Body() createProductDto: CreateProductDto): Promise<Product> {
+  create(@Body(CustomValidationPipe) createProductDto: CreateProductDto): Promise<Product> {
     return this.productsService.create(createProductDto);
   }
 
@@ -49,6 +54,7 @@ export class ProductsController {
   @ApiQuery({ name: 'sort_by', required: false, description: '排序字段：price, created_at, view_count', example: 'created_at' })
   @ApiQuery({ name: 'sort_order', required: false, description: '排序方式：ASC, DESC', example: 'DESC' })
   @ApiResponse({ status: 200, description: '获取成功' })
+  @Public()
   findAll(
     @Query('status') status?: ProductStatus,
     @Query('category') category?: string,
@@ -88,6 +94,7 @@ export class ProductsController {
   @ApiParam({ name: 'id', type: 'number', description: '商品ID' })
   @ApiResponse({ status: 200, description: '获取成功', type: Product })
   @ApiResponse({ status: 404, description: '商品不存在' })
+  @Public()
   findOne(@Param('id', ParseIntPipe) id: number): Promise<Product> {
     return this.productsService.findOne(id);
   }

@@ -1218,11 +1218,638 @@
           "订单"
         ]
       }
+    },
+    "/admin/auth/login": {
+      "post": {
+        "operationId": "AdminAuthController_login",
+        "summary": "管理员登录",
+        "description": "管理员用户登录系统",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功"
+          },
+          "401": {
+            "description": "账号或密码错误"
+          }
+        },
+        "tags": [
+          "后台管理-认证"
+        ]
+      }
+    },
+    "/admin/auth/profile": {
+      "get": {
+        "operationId": "AdminAuthController_getProfile",
+        "summary": "获取管理员信息",
+        "description": "获取当前登录管理员的基本信息",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-认证"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/auth/change-password": {
+      "post": {
+        "operationId": "AdminAuthController_changePassword",
+        "summary": "修改密码",
+        "description": "修改当前登录管理员的密码",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "密码修改成功"
+          },
+          "400": {
+            "description": "原密码错误"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-认证"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/auth/validate-token": {
+      "get": {
+        "operationId": "AdminAuthController_validateToken",
+        "summary": "验证令牌",
+        "description": "验证JWT令牌是否有效",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "令牌有效"
+          },
+          "401": {
+            "description": "令牌无效"
+          }
+        },
+        "tags": [
+          "后台管理-认证"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/users": {
+      "post": {
+        "operationId": "AdminUserController_create",
+        "summary": "创建管理员用户",
+        "description": "创建新的管理员用户账号",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdminUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "用户创建成功"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "404": {
+            "description": "角色不存在"
+          },
+          "409": {
+            "description": "用户名已存在"
+          }
+        },
+        "tags": [
+          "后台管理-用户管理"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "AdminUserController_findAll",
+        "summary": "获取用户列表",
+        "description": "获取管理员用户列表，支持分页和搜索",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": false,
+            "in": "query",
+            "description": "角色ID筛选",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "状态筛选：0-禁用，1-启用",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "搜索关键词（用户名、真实姓名）",
+            "schema": {}
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "每页数量，默认10",
+            "schema": {}
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "页码，默认1",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-用户管理"
+        ]
+      }
+    },
+    "/admin/users/{id}": {
+      "get": {
+        "operationId": "AdminUserController_findOne",
+        "summary": "获取用户详情",
+        "description": "根据ID获取管理员用户的详细信息",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "tags": [
+          "后台管理-用户管理"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "AdminUserController_update",
+        "summary": "更新用户信息",
+        "description": "更新管理员用户的基本信息",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "404": {
+            "description": "用户不存在"
+          },
+          "409": {
+            "description": "用户名已存在"
+          }
+        },
+        "tags": [
+          "后台管理-用户管理"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "AdminUserController_remove",
+        "summary": "删除用户",
+        "description": "删除指定的管理员用户账号",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功"
+          },
+          "400": {
+            "description": "不能删除自己"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "tags": [
+          "后台管理-用户管理"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/users/{id}/reset-password": {
+      "post": {
+        "operationId": "AdminUserController_resetPassword",
+        "summary": "重置密码",
+        "description": "重置指定用户的密码为默认密码",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "密码重置成功"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "tags": [
+          "后台管理-用户管理"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/users/{id}/status": {
+      "patch": {
+        "operationId": "AdminUserController_toggleStatus",
+        "summary": "启用/禁用用户",
+        "description": "启用或禁用指定的管理员用户账号",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "description": "状态：0-禁用，1-启用",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作成功"
+          },
+          "400": {
+            "description": "不能禁用自己"
+          },
+          "401": {
+            "description": "未授权"
+          },
+          "404": {
+            "description": "用户不存在"
+          }
+        },
+        "tags": [
+          "后台管理-用户管理"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/dashboard/core-metrics": {
+      "get": {
+        "operationId": "DashboardController_getCoreMetrics",
+        "summary": "获取核心指标",
+        "description": "获取系统核心运营指标数据",
+        "parameters": [
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "description": "开始日期，格式：YYYY-MM-DD",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "description": "结束日期，格式：YYYY-MM-DD",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/dashboard/sales-trend": {
+      "get": {
+        "operationId": "DashboardController_getSalesTrend",
+        "summary": "获取销售趋势",
+        "description": "获取指定周期内的销售趋势数据",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "统计周期：day(日), week(周), month(月)",
+            "schema": {
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "required": false,
+            "in": "query",
+            "description": "统计天数，默认30天",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/dashboard/category-distribution": {
+      "get": {
+        "operationId": "DashboardController_getCategoryDistribution",
+        "summary": "获取分类分布",
+        "description": "获取商品分类分布统计数据",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/dashboard/top-products": {
+      "get": {
+        "operationId": "DashboardController_getTopProducts",
+        "summary": "获取热门商品",
+        "description": "获取热门商品排行数据",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "限制数量，默认10",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/dashboard/user-growth": {
+      "get": {
+        "operationId": "DashboardController_getUserGrowth",
+        "summary": "获取用户增长",
+        "description": "获取用户增长趋势数据",
+        "parameters": [
+          {
+            "name": "days",
+            "required": false,
+            "in": "query",
+            "description": "统计天数，默认30天",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/admin/dashboard/real-time-data": {
+      "get": {
+        "operationId": "DashboardController_getRealTimeData",
+        "summary": "获取实时数据",
+        "description": "获取系统实时运营数据",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "info": {
     "title": "二手交易系统 API",
-    "description": "二手交易系统后端接口文档",
+    "description": "二手交易系统后端接口文档，包含前台用户接口和后台管理接口",
     "version": "1.0",
     "contact": {}
   },
@@ -1238,10 +1865,29 @@
     {
       "name": "comments",
       "description": "评论相关接口"
+    },
+    {
+      "name": "后台管理-认证",
+      "description": "后台管理认证接口"
+    },
+    {
+      "name": "后台管理-数据大屏",
+      "description": "后台管理数据大屏接口"
+    },
+    {
+      "name": "后台管理-用户管理",
+      "description": "后台管理用户管理接口"
     }
   ],
   "servers": [],
   "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
     "schemas": {
       "RegisterDto": {
         "type": "object",
@@ -1352,19 +1998,19 @@
       "LoginDto": {
         "type": "object",
         "properties": {
-          "usernameOrEmail": {
+          "username": {
             "type": "string",
-            "description": "用户名或邮箱",
-            "example": "john_doe"
+            "description": "管理员账号",
+            "example": "admin"
           },
           "password": {
             "type": "string",
             "description": "密码",
-            "example": "password123"
+            "example": "admin123"
           }
         },
         "required": [
-          "usernameOrEmail",
+          "username",
           "password"
         ]
       },
@@ -1812,6 +2458,91 @@
           "payment_method": {
             "type": "string",
             "description": "支付方式"
+          }
+        }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "type": "string",
+            "description": "原密码",
+            "example": "oldPassword123"
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "新密码",
+            "example": "newPassword456"
+          },
+          "confirmPassword": {
+            "type": "string",
+            "description": "确认新密码",
+            "example": "newPassword456"
+          }
+        },
+        "required": [
+          "oldPassword",
+          "newPassword",
+          "confirmPassword"
+        ]
+      },
+      "CreateAdminUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "管理员账号",
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "example": "password123"
+          },
+          "realName": {
+            "type": "string",
+            "description": "真实姓名",
+            "example": "张三"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号",
+            "example": "13800138000"
+          },
+          "roleId": {
+            "type": "number",
+            "description": "角色ID",
+            "example": 1
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "roleId"
+        ]
+      },
+      "UpdateAdminUserDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "number",
+            "description": "状态：1启用 0禁用",
+            "example": 1
+          },
+          "realName": {
+            "type": "string",
+            "description": "真实姓名",
+            "example": "李四"
+          },
+          "phone": {
+            "type": "string",
+            "description": "手机号",
+            "example": "13800138001"
+          },
+          "roleId": {
+            "type": "number",
+            "description": "角色ID",
+            "example": 2
           }
         }
       }

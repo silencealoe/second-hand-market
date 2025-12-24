@@ -17,11 +17,14 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto): Promise<LoginResponseDto> {
+    // 确定登录标识（用户名或邮箱）
+    const loginIdentifier = loginDto.usernameOrEmail || loginDto.username;
+    
     // 查找用户（通过用户名或邮箱）
     const user = await this.usersRepository.findOne({
       where: [
-        { username: loginDto.usernameOrEmail },
-        { email: loginDto.usernameOrEmail },
+        { username: loginIdentifier },
+        { email: loginIdentifier },
       ],
     });
 

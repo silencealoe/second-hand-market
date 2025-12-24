@@ -10,6 +10,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,9 +23,12 @@ import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from './entities/comment.entity';
+import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('comments')
 @Controller('comments')
+@UseInterceptors(LoggingInterceptor)
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
@@ -39,6 +43,7 @@ export class CommentsController {
   @ApiOperation({ summary: '获取评论列表' })
   @ApiQuery({ name: 'product_id', required: false, description: '商品ID筛选' })
   @ApiResponse({ status: 200, description: '获取成功', type: [Comment] })
+  @Public()
   findAll(@Query('product_id') productId?: string): Promise<Comment[]> {
     const productIdNum = productId ? parseInt(productId, 10) : undefined;
     return this.commentsService.findAll(productIdNum);
@@ -49,6 +54,7 @@ export class CommentsController {
   @ApiParam({ name: 'id', type: 'number', description: '评论ID' })
   @ApiResponse({ status: 200, description: '获取成功', type: Comment })
   @ApiResponse({ status: 404, description: '评论不存在' })
+  @Public()
   findOne(@Param('id', ParseIntPipe) id: number): Promise<Comment> {
     return this.commentsService.findOne(id);
   }

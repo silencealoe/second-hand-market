@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -18,9 +19,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { User } from './entities/user.entity';
+import { Public } from '../common/decorators/public.decorator';
+import { LoggingInterceptor } from '../common/interceptors/logging.interceptor';
 
 @ApiTags('users')
 @Controller('users')
+@UseInterceptors(LoggingInterceptor)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
@@ -32,6 +36,7 @@ export class UsersController {
   @ApiOperation({ summary: '用户注册' })
   @ApiResponse({ status: 201, description: '注册成功', type: LoginResponseDto })
   @ApiResponse({ status: 409, description: '用户名或邮箱已存在' })
+  @Public()
   register(@Body() registerDto: RegisterDto): Promise<LoginResponseDto> {
     return this.authService.register(registerDto);
   }
@@ -41,6 +46,7 @@ export class UsersController {
   @ApiOperation({ summary: '用户登录' })
   @ApiResponse({ status: 200, description: '登录成功', type: LoginResponseDto })
   @ApiResponse({ status: 401, description: '用户名或密码错误' })
+  @Public()
   login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
     return this.authService.login(loginDto);
   }

@@ -5,6 +5,8 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -14,9 +16,15 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
-      transform: true,
+      transform: true, // 自动将请求体转换为 DTO 实例
     }),
   );
+
+  // 全局日志拦截器
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  // 全局异常过滤器
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // 配置静态文件服务
   app.useStaticAssets(path.join(__dirname, '..', 'uploads'), {
@@ -29,11 +37,15 @@ async function bootstrap() {
   // Swagger 配置
   const config = new DocumentBuilder()
     .setTitle('二手交易系统 API')
-    .setDescription('二手交易系统后端接口文档')
+    .setDescription('二手交易系统后端接口文档，包含前台用户接口和后台管理接口')
     .setVersion('1.0')
+    .addBearerAuth()
     .addTag('users', '用户相关接口')
     .addTag('products', '商品相关接口')
     .addTag('comments', '评论相关接口')
+    .addTag('后台管理-认证', '后台管理认证接口')
+    .addTag('后台管理-数据大屏', '后台管理数据大屏接口')
+    .addTag('后台管理-用户管理', '后台管理用户管理接口')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
