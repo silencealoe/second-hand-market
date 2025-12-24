@@ -27,6 +27,6 @@
 
 
 ## 后台管理前端
-根据后端生成的swagger-docs.json文件 中/admin路径部分和admin.md文件中的核心功能需求模块，新建frontend-admin文件夹，在这个文件夹下使用React, Ant Design Pro, echarts, axios等搭建一个后台管理系统，包括登录页面，主页面布局头部显示管理系统名称，登录用户信息， 左边是菜单，右边是内容区域，菜单首页是数据dashboard, 先实现登录功能，登录后跳转到主页面，主页面显示数据dashboard，包括核心数据模块和图表模块。
+根据后端生成的swagger-docs.json文件 中/admin路径部分和admin.md文件中的核心功能需求模块，在frontend-admin中实现页面，包括登录页面，主页面布局头部显示管理系统名称，登录用户信息， 左边是菜单，右边是内容区域，菜单首页是数据dashboard, 先实现登录功能，登录后跳转到主页面，主页面显示数据dashboard，包括核心数据模块和图表模块。统计数据的图表（折线图，饼状图等）使用echarts实现
 
 
