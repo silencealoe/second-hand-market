@@ -1646,20 +1646,16 @@
         "description": "获取系统核心运营指标数据",
         "parameters": [
           {
-            "name": "startDate",
+            "name": "period",
             "required": false,
             "in": "query",
-            "description": "开始日期，格式：YYYY-MM-DD",
+            "description": "统计周期：day(日), week(周), month(月)",
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "endDate",
-            "required": false,
-            "in": "query",
-            "description": "结束日期，格式：YYYY-MM-DD",
-            "schema": {
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
               "type": "string"
             }
           }
@@ -1730,12 +1726,75 @@
         ]
       }
     },
+    "/admin/dashboard/export-sales-trend": {
+      "get": {
+        "operationId": "DashboardController_exportSalesTrend",
+        "summary": "导出销售趋势数据",
+        "description": "导出指定周期内的销售趋势数据到Excel文件",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "统计周期：day(日), week(周), month(月)",
+            "schema": {
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "required": false,
+            "in": "query",
+            "description": "统计天数，默认30天",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "导出成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/admin/dashboard/category-distribution": {
       "get": {
         "operationId": "DashboardController_getCategoryDistribution",
         "summary": "获取分类分布",
         "description": "获取商品分类分布统计数据",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "统计周期：day(日), week(周), month(月)",
+            "schema": {
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "获取成功"
@@ -1767,6 +1826,20 @@
             "description": "限制数量，默认10",
             "schema": {
               "type": "number"
+            }
+          },
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "统计周期：day(日), week(周), month(月)",
+            "schema": {
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "type": "string"
             }
           }
         ],

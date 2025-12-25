@@ -4,6 +4,7 @@ import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { User } from '../../users/entities/user.entity';
 import { Product } from '../../products/entities/product.entity';
+import * as XLSX from 'xlsx';
 
 /**
  * 数据大屏统计服务
@@ -22,12 +23,38 @@ export class DashboardService {
 
   /**
    * 获取核心指标数据
-   * @param startDate 开始日期
-   * @param endDate 结束日期
+   * @param period 统计周期：day, week, month
    * @returns 核心指标数据
    */
-  async getCoreMetrics(startDate?: Date, endDate?: Date) {
-    const dateCondition = this.buildDateCondition(startDate, endDate);
+  async getCoreMetrics(period: 'day' | 'week' | 'month' = 'day') {
+    const endDate = new Date();
+    
+    // 根据period参数调整统计天数
+    let actualDays: number;
+    switch (period) {
+      case 'day':
+        actualDays = 1; // 当天24小时的数据
+        break;
+      case 'week':
+        actualDays = 7; // 7天的数据
+        break;
+      case 'month':
+      default:
+        actualDays = 30; // 30天的数据
+        break;
+    }
+    
+    // 计算开始日期
+    let startDate: Date;
+    if (period === 'day') {
+      // 当天24小时的数据，startDate是当天的开始时间（00:00:00）
+      startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      // 其他情况，根据实际天数计算startDate
+      startDate = new Date(endDate.getTime() - (actualDays - 1) * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
+    }
     
     // 今日订单数 - 使用QueryBuilder避免类型问题
     const todayOrdersQuery = this.orderRepository
@@ -35,14 +62,11 @@ export class DashboardService {
       .where('order.created_at BETWEEN :todayStart AND :todayEnd', {
         todayStart: new Date(new Date().setHours(0, 0, 0, 0)),
         todayEnd: new Date(new Date().setHours(23, 59, 59, 999)),
+      })
+      .andWhere('order.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
       });
-
-    if (dateCondition) {
-      todayOrdersQuery.andWhere('order.created_at BETWEEN :conditionStart AND :conditionEnd', {
-        conditionStart: dateCondition.createdAt.value[0],
-        conditionEnd: dateCondition.createdAt.value[1],
-      });
-    }
 
     const todayOrders = await todayOrdersQuery.getCount();
 
@@ -50,42 +74,36 @@ export class DashboardService {
     const todayRevenueQuery = this.orderRepository
       .createQueryBuilder('order')
       .select('SUM(order.total_price)', 'total')
-      .where('order.created_at BETWEEN :start AND :end', {
-        start: new Date(new Date().setHours(0, 0, 0, 0)),
-        end: new Date(new Date().setHours(23, 59, 59, 999)),
+      .where('order.created_at BETWEEN :todayStart AND :todayEnd', {
+        todayStart: new Date(new Date().setHours(0, 0, 0, 0)),
+        todayEnd: new Date(new Date().setHours(23, 59, 59, 999)),
       })
-      .andWhere('order.status = :status', { status: 'completed' });
-
-    if (dateCondition) {
-      todayRevenueQuery.andWhere('order.created_at BETWEEN :conditionStart AND :conditionEnd', {
-        conditionStart: dateCondition.createdAt.value[0],
-        conditionEnd: dateCondition.createdAt.value[1],
+      .andWhere('order.status = :status', { status: 'completed' })
+      .andWhere('order.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
       });
-    }
 
     const todayRevenue = await todayRevenueQuery.getRawOne();
 
     // 累计用户数 - 使用QueryBuilder
-    const totalUsersQuery = this.userRepository.createQueryBuilder('user');
-    if (dateCondition) {
-      totalUsersQuery.where('user.created_at BETWEEN :conditionStart AND :conditionEnd', {
-        conditionStart: dateCondition.createdAt.value[0],
-        conditionEnd: dateCondition.createdAt.value[1],
+    const totalUsersQuery = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
       });
-    }
+    
     const totalUsers = await totalUsersQuery.getCount();
 
     // 在售商品数 - 使用QueryBuilder
     const activeProductsQuery = this.productRepository
       .createQueryBuilder('product')
-      .where('product.status = :status', { status: 'on_sale' });
-    
-    if (dateCondition) {
-      activeProductsQuery.andWhere('product.created_at BETWEEN :conditionStart AND :conditionEnd', {
-        conditionStart: dateCondition.createdAt.value[0],
-        conditionEnd: dateCondition.createdAt.value[1],
+      .where('product.status = :status', { status: 'on_sale' })
+      .andWhere('product.created_at BETWEEN :start AND :end', {
+        start: startDate,
+        end: endDate,
       });
-    }
     
     const activeProducts = await activeProductsQuery.getCount();
 
@@ -273,9 +291,39 @@ export class DashboardService {
 
   /**
    * 获取商品分类分布数据（简化版本）
+   * @param period 统计周期：day, week, month
    * @returns 分类分布数据
    */
-  async getCategoryDistribution() {
+  async getCategoryDistribution(period: 'day' | 'week' | 'month' = 'day') {
+    const endDate = new Date();
+    
+    // 根据period参数调整统计天数
+    let actualDays: number;
+    switch (period) {
+      case 'day':
+        actualDays = 1; // 当天24小时的数据
+        break;
+      case 'week':
+        actualDays = 7; // 7天的数据
+        break;
+      case 'month':
+      default:
+        actualDays = 30; // 30天的数据
+        break;
+    }
+    
+    // 计算开始日期
+    let startDate: Date;
+    if (period === 'day') {
+      // 当天24小时的数据，startDate是当天的开始时间（00:00:00）
+      startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      // 其他情况，根据实际天数计算startDate
+      startDate = new Date(endDate.getTime() - (actualDays - 1) * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
     const results = await this.productRepository
       .createQueryBuilder('product')
       .select([
@@ -284,6 +332,7 @@ export class DashboardService {
       ])
       .where('product.category IS NOT NULL AND product.category != :empty', { empty: '' })
       .andWhere('product.status = :status', { status: 'on_sale' })
+      .andWhere('product.created_at BETWEEN :start AND :end', { start: startDate, end: endDate })
       .groupBy('product.category')
       .getRawMany();
 
@@ -299,9 +348,39 @@ export class DashboardService {
   /**
    * 获取热门商品排行（简化版本）
    * @param limit 限制数量
+   * @param period 统计周期：day, week, month
    * @returns 热门商品排行
    */
-  async getTopProducts(limit: number = 10) {
+  async getTopProducts(limit: number = 10, period: 'day' | 'week' | 'month' = 'day') {
+    const endDate = new Date();
+    
+    // 根据period参数调整统计天数
+    let actualDays: number;
+    switch (period) {
+      case 'day':
+        actualDays = 1; // 当天24小时的数据
+        break;
+      case 'week':
+        actualDays = 7; // 7天的数据
+        break;
+      case 'month':
+      default:
+        actualDays = 30; // 30天的数据
+        break;
+    }
+    
+    // 计算开始日期
+    let startDate: Date;
+    if (period === 'day') {
+      // 当天24小时的数据，startDate是当天的开始时间（00:00:00）
+      startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      // 其他情况，根据实际天数计算startDate
+      startDate = new Date(endDate.getTime() - (actualDays - 1) * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
     const results = await this.productRepository
       .createQueryBuilder('product')
       .select([
@@ -312,6 +391,7 @@ export class DashboardService {
         'product.view_count as viewCount',
       ])
       .where('product.status = :status', { status: 'on_sale' })
+      .andWhere('product.created_at BETWEEN :start AND :end', { start: startDate, end: endDate })
       .orderBy('product.view_count', 'DESC')
       .limit(limit)
       .getRawMany();
@@ -387,6 +467,43 @@ export class DashboardService {
       revenueLastHour: parseFloat(revenueLastHour?.total || '0'),
       timestamp: new Date(),
     };
+  }
+
+  /**
+   * 导出销售趋势数据到Excel
+   * @param period 统计周期：day, week, month
+   * @param days 统计天数（可选）
+   * @returns Excel文件的Buffer数据
+   */
+  async exportSalesTrendToExcel(period: 'day' | 'week' | 'month' = 'day', days?: number) {
+    // 先获取销售趋势数据
+    const salesTrendData = await this.getSalesTrend(period, days);
+
+    // 准备Excel数据
+    const excelData = salesTrendData.map(item => ({
+      日期: item.date,
+      订单数: item.orderCount,
+      销量: item.salesCount,
+      成交额: item.revenue,
+    }));
+
+    // 创建工作簿和工作表
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '销售趋势数据');
+
+    // 设置列宽
+    ws['!cols'] = [
+      { wch: 20 }, // 日期列宽
+      { wch: 10 }, // 订单数列宽
+      { wch: 10 }, // 销量列宽
+      { wch: 15 }, // 成交额列宽
+    ];
+
+    // 生成Excel文件的Buffer
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+    return excelBuffer;
   }
 
   /**

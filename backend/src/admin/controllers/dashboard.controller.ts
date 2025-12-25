@@ -1,4 +1,5 @@
-import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Req, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { DashboardService } from '../services/dashboard.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -14,26 +15,20 @@ export class DashboardController {
 
   /**
    * 获取核心指标数据
-   * @param startDate 开始日期（可选）
-   * @param endDate 结束日期（可选）
+   * @param period 统计周期（day, week, month）
    * @returns 核心指标数据
    */
   @Get('core-metrics')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '获取核心指标', description: '获取系统核心运营指标数据' })
-  @ApiQuery({ name: 'startDate', required: false, description: '开始日期，格式：YYYY-MM-DD' })
-  @ApiQuery({ name: 'endDate', required: false, description: '结束日期，格式：YYYY-MM-DD' })
+  @ApiQuery({ name: 'period', required: false, description: '统计周期：day(日), week(周), month(月)', enum: ['day', 'week', 'month'] })
   @ApiResponse({ status: 200, description: '获取成功' })
   @ApiResponse({ status: 401, description: '未授权' })
   async getCoreMetrics(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string
+    @Query('period') period: 'day' | 'week' | 'month' = 'day'
   ) {
-    const start = startDate ? new Date(startDate) : undefined;
-    const end = endDate ? new Date(endDate) : undefined;
-    
-    const result = await this.dashboardService.getCoreMetrics(start, end);
+    const result = await this.dashboardService.getCoreMetrics(period);
     
     return {
       code: 200,
@@ -70,17 +65,53 @@ export class DashboardController {
   }
 
   /**
+   * 导出销售趋势数据到Excel
+   * @param period 统计周期（day, week, month）
+   * @param days 天数（可选，默认30天）
+   * @returns Excel文件
+   */
+  @Get('export-sales-trend')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '导出销售趋势数据', description: '导出指定周期内的销售趋势数据到Excel文件' })
+  @ApiQuery({ name: 'period', required: false, description: '统计周期：day(日), week(周), month(月)', enum: ['day', 'week', 'month'] })
+  @ApiQuery({ name: 'days', required: false, description: '统计天数，默认30天' })
+  @ApiResponse({ status: 200, description: '导出成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  async exportSalesTrend(
+    @Query('period') period: 'day' | 'week' | 'month' = 'day',
+    @Query('days') days: number = 30,
+    @Res() res: Response
+  ) {
+    const excelBuffer = await this.dashboardService.exportSalesTrendToExcel(period, days);
+    
+    // 设置响应头
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    // 使用encodeURIComponent编码中文文件名，解决中文文件名导致的错误
+    const filename = `销售趋势数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
+    res.setHeader('Content-Length', excelBuffer.length);
+    
+    // 返回Excel文件
+    return res.send(excelBuffer);
+  }
+
+  /**
    * 获取商品分类分布数据
+   * @param period 统计周期（day, week, month）
    * @returns 商品分类分布数据
    */
   @Get('category-distribution')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '获取分类分布', description: '获取商品分类分布统计数据' })
+  @ApiQuery({ name: 'period', required: false, description: '统计周期：day(日), week(周), month(月)', enum: ['day', 'week', 'month'] })
   @ApiResponse({ status: 200, description: '获取成功' })
   @ApiResponse({ status: 401, description: '未授权' })
-  async getCategoryDistribution() {
-    const result = await this.dashboardService.getCategoryDistribution();
+  async getCategoryDistribution(
+    @Query('period') period: 'day' | 'week' | 'month' = 'day'
+  ) {
+    const result = await this.dashboardService.getCategoryDistribution(period);
     
     return {
       code: 200,
@@ -92,6 +123,7 @@ export class DashboardController {
   /**
    * 获取热门商品排行
    * @param limit 限制数量（可选，默认10）
+   * @param period 统计周期（day, week, month）
    * @returns 热门商品排行数据
    */
   @Get('top-products')
@@ -99,10 +131,14 @@ export class DashboardController {
   @ApiBearerAuth()
   @ApiOperation({ summary: '获取热门商品', description: '获取热门商品排行数据' })
   @ApiQuery({ name: 'limit', required: false, description: '限制数量，默认10' })
+  @ApiQuery({ name: 'period', required: false, description: '统计周期：day(日), week(周), month(月)', enum: ['day', 'week', 'month'] })
   @ApiResponse({ status: 200, description: '获取成功' })
   @ApiResponse({ status: 401, description: '未授权' })
-  async getTopProducts(@Query('limit') limit: number = 10) {
-    const result = await this.dashboardService.getTopProducts(limit);
+  async getTopProducts(
+    @Query('limit') limit: number = 10,
+    @Query('period') period: 'day' | 'week' | 'month' = 'day'
+  ) {
+    const result = await this.dashboardService.getTopProducts(limit, period);
     
     return {
       code: 200,

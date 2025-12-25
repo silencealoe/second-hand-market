@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Statistic, Select, DatePicker, Button, Table, message } from 'antd';
-import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, ArrowDownOutlined, DownloadOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { getCoreMetrics, getSalesTrend, getCategoryDistribution, getTopProducts } from '@/services/admin/dashboard';
+import { getCoreMetrics, getSalesTrend, getCategoryDistribution, getTopProducts, exportSalesTrend } from '@/services/admin/dashboard';
 import { LineChart, PieChart } from '@/components/Charts';
 import styles from './index.less';
 
@@ -58,10 +58,10 @@ const HomePage: React.FC = () => {
   // 获取核心指标数据
   const fetchCoreMetrics = async () => {
     try {
-      const params = dateRange ? {
-        startDate: dateRange[0].toISOString().split('T')[0],
-        endDate: dateRange[1].toISOString().split('T')[0],
-      } : {};
+      // 使用与销售趋势相同的参数：period
+      const params = {
+        period: dimension,
+      };
       
       const response = await getCoreMetrics(params);
       setCoreMetrics(response);
@@ -93,7 +93,9 @@ const HomePage: React.FC = () => {
   const fetchCategoryDistribution = async () => {
     try {
       // 注意：后端不接受type参数
-      const params = {};
+      const params = {
+        period: dimension,
+      };
       
       const response = await getCategoryDistribution(params);
       setCategoryDistribution(response);
@@ -106,9 +108,10 @@ const HomePage: React.FC = () => {
   // 获取TOP商品数据
   const fetchTopProducts = async () => {
     try {
-      // 注意：后端只接受limit参数，不接受startDate和endDate
+      // 注意：后端只接受limit和period参数，不接受startDate和endDate
       const params = {
         limit: 10,
+        period: dimension,
       };
       
       const response = await getTopProducts(params);
@@ -139,6 +142,41 @@ const HomePage: React.FC = () => {
     refreshData();
   }, []);
 
+  // 导出销售趋势数据到Excel
+  const handleExportSalesTrend = async () => {
+    try {
+      // 传递当前的统计周期参数
+      const params = {
+        period: dimension,
+      };
+      
+      // 调用导出API
+      const blob = await exportSalesTrend(params);
+      
+      // 创建下载链接
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // 设置文件名
+      const fileName = `销售趋势数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.setAttribute('download', fileName);
+      
+      // 触发下载
+      document.body.appendChild(link);
+      link.click();
+      
+      // 清理
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      message.success('导出成功！');
+    } catch (error) {
+      message.error('导出失败，请稍后重试');
+      console.error('导出销售趋势数据失败：', error);
+    }
+  };
+
   // 筛选条件变化时重新加载数据
   useEffect(() => {
     refreshData();
@@ -158,28 +196,28 @@ const HomePage: React.FC = () => {
       <div className={styles.container}>
         {/* 筛选区域 */}
         <div className={styles.filterArea} style={{ marginBottom: 24 }}>
-          <RangePicker
+          {/* <RangePicker
             value={dateRange ? [dateRange[0] as any, dateRange[1] as any] : undefined}
             onChange={(dates) => setDateRange(dates as [Date, Date] | null)}
             style={{ marginRight: 16 }}
-          />
+          /> */}
           <Select
             value={dimension}
             onChange={(value) => setDimension(value)}
-            style={{ width: 120, marginRight: 16 }}
+            style={{ width: 200, marginRight: 16 }}
           >
             <Option value="day">今日（小时）</Option>
             <Option value="week">七日（天）</Option>
             <Option value="month">月度（日）</Option>
           </Select>
-          <Select
+          {/* <Select
             value={distributionType}
             onChange={(value) => setDistributionType(value)}
             style={{ width: 120, marginRight: 16 }}
           >
             <Option value="sales">销量占比</Option>
             <Option value="revenue">成交额占比</Option>
-          </Select>
+          </Select> */}
           <Button type="primary" onClick={refreshData} loading={loading}>
             刷新数据
           </Button>
@@ -234,7 +272,7 @@ const HomePage: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="累计用户数"
+                title="新增用户数"
                 value={coreMetrics?.totalUsers || 0}
                 suffix={
                   <span>
@@ -255,7 +293,7 @@ const HomePage: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="在售商品数"
+                title="新增在售商品数"
                 value={coreMetrics?.activeProducts || 0}
                 suffix={
                   <span>
@@ -278,7 +316,19 @@ const HomePage: React.FC = () => {
         {/* 图表区域 */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col span={16}>
-            <Card title="销量趋势" loading={loading}>
+            <Card 
+              title="销量趋势" 
+              loading={loading}
+              extra={
+                <Button 
+                  type="primary" 
+                  icon={<DownloadOutlined />}
+                  onClick={handleExportSalesTrend}
+                >
+                  导出数据
+                </Button>
+              }
+            >
               {salesTrend && (
                 <LineChart
                   title="销量与成交额趋势"
