@@ -32,13 +32,13 @@ export class DashboardService {
     // 今日订单数 - 使用QueryBuilder避免类型问题
     const todayOrdersQuery = this.orderRepository
       .createQueryBuilder('order')
-      .where('order.createdAt BETWEEN :todayStart AND :todayEnd', {
+      .where('order.created_at BETWEEN :todayStart AND :todayEnd', {
         todayStart: new Date(new Date().setHours(0, 0, 0, 0)),
         todayEnd: new Date(new Date().setHours(23, 59, 59, 999)),
       });
 
     if (dateCondition) {
-      todayOrdersQuery.andWhere('order.createdAt BETWEEN :conditionStart AND :conditionEnd', {
+      todayOrdersQuery.andWhere('order.created_at BETWEEN :conditionStart AND :conditionEnd', {
         conditionStart: dateCondition.createdAt.value[0],
         conditionEnd: dateCondition.createdAt.value[1],
       });
@@ -49,15 +49,15 @@ export class DashboardService {
     // 今日成交额
     const todayRevenueQuery = this.orderRepository
       .createQueryBuilder('order')
-      .select('SUM(order.totalAmount)', 'total')
-      .where('order.createdAt BETWEEN :start AND :end', {
+      .select('SUM(order.total_price)', 'total')
+      .where('order.created_at BETWEEN :start AND :end', {
         start: new Date(new Date().setHours(0, 0, 0, 0)),
         end: new Date(new Date().setHours(23, 59, 59, 999)),
       })
       .andWhere('order.status = :status', { status: 'completed' });
 
     if (dateCondition) {
-      todayRevenueQuery.andWhere('order.createdAt BETWEEN :conditionStart AND :conditionEnd', {
+      todayRevenueQuery.andWhere('order.created_at BETWEEN :conditionStart AND :conditionEnd', {
         conditionStart: dateCondition.createdAt.value[0],
         conditionEnd: dateCondition.createdAt.value[1],
       });
@@ -68,7 +68,7 @@ export class DashboardService {
     // 累计用户数 - 使用QueryBuilder
     const totalUsersQuery = this.userRepository.createQueryBuilder('user');
     if (dateCondition) {
-      totalUsersQuery.where('user.createdAt BETWEEN :conditionStart AND :conditionEnd', {
+      totalUsersQuery.where('user.created_at BETWEEN :conditionStart AND :conditionEnd', {
         conditionStart: dateCondition.createdAt.value[0],
         conditionEnd: dateCondition.createdAt.value[1],
       });
@@ -78,10 +78,10 @@ export class DashboardService {
     // 在售商品数 - 使用QueryBuilder
     const activeProductsQuery = this.productRepository
       .createQueryBuilder('product')
-      .where('product.status = :status', { status: 'active' });
+      .where('product.status = :status', { status: 'on_sale' });
     
     if (dateCondition) {
-      activeProductsQuery.andWhere('product.createdAt BETWEEN :conditionStart AND :conditionEnd', {
+      activeProductsQuery.andWhere('product.created_at BETWEEN :conditionStart AND :conditionEnd', {
         conditionStart: dateCondition.createdAt.value[0],
         conditionEnd: dateCondition.createdAt.value[1],
       });
@@ -102,33 +102,173 @@ export class DashboardService {
   /**
    * 获取销售趋势数据（简化版本）
    * @param period 统计周期：day, week, month
-   * @param days 统计天数
+   * @param days 统计天数（可选，默认根据period参数自动调整）
    * @returns 销售趋势数据
    */
-  async getSalesTrend(period: 'day' | 'week' | 'month' = 'day', days: number = 30) {
+  async getSalesTrend(period: 'day' | 'week' | 'month' = 'day', days?: number) {
     const endDate = new Date();
-    const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
+    
+    // 根据period参数调整统计天数
+    let actualDays: number;
+    if (days) {
+      actualDays = days;
+    } else {
+      switch (period) {
+        case 'day':
+          actualDays = 1; // 当天24小时的数据
+          break;
+        case 'week':
+          actualDays = 7; // 7天的数据
+          break;
+        case 'month':
+        default:
+          actualDays = 30; // 30天的数据
+          break;
+      }
+    }
+    
+    let startDate: Date;
+    if (period === 'day') {
+      // 当天24小时的数据，startDate是当天的开始时间（00:00:00）
+      startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      // 其他情况，根据实际天数计算startDate
+      // 计算完整的时间范围，例如7天应该是从今天往前推6天（包括今天共7天）
+      // 但为了确保包含所有数据，我们需要将时间设置为当天的开始时间
+      startDate = new Date(endDate.getTime() - (actualDays - 1) * 24 * 60 * 60 * 1000);
+      // 设置为当天的开始时间
+      startDate.setHours(0, 0, 0, 0);
+    }
+    
+    // 输出调试信息
+    console.log('Sales Trend Debug:', {
+      period,
+      actualDays,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    });
+    
+    // 根据period参数确定日期格式化和分组方式
+    let dateFormat: string;
+    let groupBy: string;
+    
+    switch (period) {
+      case 'day':
+        // 当天24小时的数据，按小时分组
+        dateFormat = 'DATE_FORMAT(order.created_at, "%Y-%m-%d %H:00:00") as date';
+        groupBy = dateFormat.replace(' as date', ''); // 使用与SELECT列表完全相同的表达式进行分组
+        break;
+      case 'week':
+        // 7天的数据，按天分组
+        dateFormat = 'DATE(order.created_at) as date';
+        groupBy = dateFormat.replace(' as date', ''); // 使用与SELECT列表完全相同的表达式进行分组
+        break;
+      case 'month':
+        // 30天的数据，按天分组
+        dateFormat = 'DATE(order.created_at) as date';
+        groupBy = dateFormat.replace(' as date', ''); // 使用与SELECT列表完全相同的表达式进行分组
+        break;
+      default:
+        // 默认按天分组
+        dateFormat = 'DATE(order.created_at) as date';
+        groupBy = dateFormat.replace(' as date', ''); // 使用与SELECT列表完全相同的表达式进行分组
+        break;
+    }
     
     const results = await this.orderRepository
       .createQueryBuilder('order')
       .select([
-        'DATE(order.createdAt) as date',
+        dateFormat,
         'COUNT(*) as orderCount',
-        'SUM(order.totalAmount) as revenue',
+        'SUM(order.quantity) as salesCount', // 将订单数量改为销量（quantity总和）
+        'SUM(order.total_price) as revenue',
       ])
-      .where('order.createdAt BETWEEN :start AND :end', {
+      .where('order.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
       })
-      .groupBy('DATE(order.createdAt)')
+      // 暂时移除status筛选，看看是否能返回数据
+      // .andWhere('order.status = :status', { status: 'paid' })
+      .groupBy(groupBy)
       .orderBy('date', 'ASC')
       .getRawMany();
 
-    return results.map(item => ({
-      date: item.date,
-      orderCount: parseInt(item.orderCount),
-      revenue: parseFloat(item.revenue || '0'),
+    // 输出查询结果
+    console.log('Sales Trend Query Results:', results);
+
+    // 将结果转换为Map以便快速查找，确保日期格式一致
+    const resultsMap = new Map(results.map(item => {
+      // 将SQL返回的Date对象转换为字符串格式（YYYY-MM-DD）
+      const dateStr = item.date instanceof Date 
+        ? item.date.toISOString().slice(0, 10) 
+        : item.date;
+      return [dateStr, item];
     }));
+    console.log('Results Map Keys:', Array.from(resultsMap.keys()));
+
+    // 生成所有日期的数组并填充零值
+    const allDates = this.generateDateRange(startDate, endDate, period);
+    console.log('Generated All Dates:', allDates);
+    
+    const finalResults = allDates.map(date => {
+      const item = resultsMap.get(date);
+      return {
+        date,
+        orderCount: item ? parseInt(item.orderCount) : 0,
+        salesCount: item ? parseInt(item.salesCount || '0') : 0,
+        revenue: item ? parseFloat(item.revenue || '0') : 0,
+      };
+    });
+    
+    console.log('Final Results:', finalResults);
+    return finalResults;
+  }
+
+  /**
+   * 生成指定日期范围内的日期数组
+   * @param startDate 开始日期
+   * @param endDate 结束日期
+   * @param period 统计周期
+   * @returns 日期数组
+   */
+  private generateDateRange(startDate: Date, endDate: Date, period: 'day' | 'week' | 'month'): string[] {
+    const dates: string[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      let formattedDate: string;
+      
+      switch (period) {
+        case 'day':
+          // 当天24小时的数据，按小时生成
+          for (let hour = 0; hour < 24; hour++) {
+            const hourDate = new Date(currentDate);
+            hourDate.setHours(hour, 0, 0, 0);
+            // 生成与SQL查询相同格式的日期字符串：YYYY-MM-DD HH:00:00
+            const year = hourDate.getFullYear();
+            const month = String(hourDate.getMonth() + 1).padStart(2, '0');
+            const day = String(hourDate.getDate()).padStart(2, '0');
+            const hours = String(hour).padStart(2, '0');
+            formattedDate = `${year}-${month}-${day} ${hours}:00:00`;
+            dates.push(formattedDate);
+          }
+          // 结束循环，因为已经生成了当天所有小时
+          currentDate.setTime(endDate.getTime() + 1);
+          break;
+        case 'week':
+        case 'month':
+        default:
+          // 按天生成
+          formattedDate = currentDate.toISOString().slice(0, 10); // YYYY-MM-DD
+          dates.push(formattedDate);
+          // 跳到下一天
+          currentDate.setDate(currentDate.getDate() + 1);
+          break;
+      }
+    }
+
+    return dates;
   }
 
   /**
@@ -138,14 +278,13 @@ export class DashboardService {
   async getCategoryDistribution() {
     const results = await this.productRepository
       .createQueryBuilder('product')
-      .leftJoin('product.category', 'category')
       .select([
-        'category.name as categoryName',
+        'product.category as categoryName',
         'COUNT(product.id) as productCount',
       ])
-      .where('category.id IS NOT NULL')
-      .andWhere('product.status = :status', { status: 'active' })
-      .groupBy('category.id, category.name')
+      .where('product.category IS NOT NULL AND product.category != :empty', { empty: '' })
+      .andWhere('product.status = :status', { status: 'on_sale' })
+      .groupBy('product.category')
       .getRawMany();
 
     const total = results.reduce((sum, item) => sum + parseInt(item.productCount), 0);
@@ -165,17 +304,15 @@ export class DashboardService {
   async getTopProducts(limit: number = 10) {
     const results = await this.productRepository
       .createQueryBuilder('product')
-      .leftJoin('product.category', 'category')
       .select([
         'product.id as productId',
-        'product.name as productName',
-        'category.name as categoryName',
+        'product.title as productName',
+        'product.category as categoryName',
         'product.price as price',
-        'product.viewCount as viewCount',
-        'product.likeCount as likeCount',
+        'product.view_count as viewCount',
       ])
-      .where('product.status = :status', { status: 'active' })
-      .orderBy('product.viewCount', 'DESC')
+      .where('product.status = :status', { status: 'on_sale' })
+      .orderBy('product.view_count', 'DESC')
       .limit(limit)
       .getRawMany();
 
@@ -185,7 +322,7 @@ export class DashboardService {
       categoryName: item.categoryName,
       price: parseFloat(item.price),
       viewCount: parseInt(item.viewCount),
-      likeCount: parseInt(item.likeCount),
+      likeCount: 0, // 没有like_count字段，返回默认值
     }));
   }
 
@@ -201,14 +338,14 @@ export class DashboardService {
     const results = await this.userRepository
       .createQueryBuilder('user')
       .select([
-        'DATE(user.createdAt) as date',
+        'DATE(user.created_at) as date',
         'COUNT(*) as userCount',
       ])
-      .where('user.createdAt BETWEEN :start AND :end', {
+      .where('user.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
       })
-      .groupBy('DATE(user.createdAt)')
+      .groupBy('DATE(user.created_at)')
       .orderBy('date', 'ASC')
       .getRawMany();
 
@@ -227,20 +364,20 @@ export class DashboardService {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const newUsersLastHour = await this.userRepository
       .createQueryBuilder('user')
-      .where('user.createdAt >= :date', { date: oneHourAgo })
+      .where('user.created_at >= :date', { date: oneHourAgo })
       .getCount();
 
     // 最近1小时新增订单 - 使用QueryBuilder
     const newOrdersLastHour = await this.orderRepository
       .createQueryBuilder('order')
-      .where('order.createdAt >= :date', { date: oneHourAgo })
+      .where('order.created_at >= :date', { date: oneHourAgo })
       .getCount();
 
     // 最近1小时成交额
     const revenueLastHour = await this.orderRepository
       .createQueryBuilder('order')
-      .select('SUM(order.totalAmount)', 'total')
-      .where('order.createdAt >= :date', { date: oneHourAgo })
+      .select('SUM(order.total_price)', 'total')
+      .where('order.created_at >= :date', { date: oneHourAgo })
       .andWhere('order.status = :status', { status: 'completed' })
       .getRawOne();
 

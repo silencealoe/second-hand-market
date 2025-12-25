@@ -34,12 +34,18 @@ export class AdminAuthController {
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
     
-    return this.adminAuthService.login(
+    const result = await this.adminAuthService.login(
       loginDto.username,
       loginDto.password,
       ipAddress,
       userAgent
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -56,7 +62,13 @@ export class AdminAuthController {
   @Public()
   async getProfile(@Req() req: any) {
     const userId = req.user.sub;
-    return this.adminAuthService.getProfile(userId);
+    const result = await this.adminAuthService.getProfile(userId);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -80,13 +92,19 @@ export class AdminAuthController {
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
     
-    return this.adminAuthService.changePassword(
+    const result = await this.adminAuthService.changePassword(
       userId,
       changePasswordDto.oldPassword,
       changePasswordDto.newPassword,
       ipAddress,
       userAgent
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -102,8 +120,12 @@ export class AdminAuthController {
   @ApiResponse({ status: 401, description: '令牌无效' })
   async validateToken(@Req() req: any) {
     return {
-      valid: true,
-      user: req.user,
+      code: 200,
+      message: 'success',
+      data: {
+        valid: true,
+        user: req.user,
+      }
     };
   }
 }

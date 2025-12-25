@@ -33,7 +33,13 @@ export class DashboardController {
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
     
-    return this.dashboardService.getCoreMetrics(start, end);
+    const result = await this.dashboardService.getCoreMetrics(start, end);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -54,7 +60,13 @@ export class DashboardController {
     @Query('period') period: 'day' | 'week' | 'month' = 'day',
     @Query('days') days: number = 30
   ) {
-    return this.dashboardService.getSalesTrend(period, days);
+    const result = await this.dashboardService.getSalesTrend(period, days);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -68,7 +80,13 @@ export class DashboardController {
   @ApiResponse({ status: 200, description: '获取成功' })
   @ApiResponse({ status: 401, description: '未授权' })
   async getCategoryDistribution() {
-    return this.dashboardService.getCategoryDistribution();
+    const result = await this.dashboardService.getCategoryDistribution();
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -84,7 +102,13 @@ export class DashboardController {
   @ApiResponse({ status: 200, description: '获取成功' })
   @ApiResponse({ status: 401, description: '未授权' })
   async getTopProducts(@Query('limit') limit: number = 10) {
-    return this.dashboardService.getTopProducts(limit);
+    const result = await this.dashboardService.getTopProducts(limit);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -100,7 +124,13 @@ export class DashboardController {
   @ApiResponse({ status: 200, description: '获取成功' })
   @ApiResponse({ status: 401, description: '未授权' })
   async getUserGrowth(@Query('days') days: number = 30) {
-    return this.dashboardService.getUserGrowth(days);
+    const result = await this.dashboardService.getUserGrowth(days);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -114,6 +144,12 @@ export class DashboardController {
   @ApiResponse({ status: 200, description: '获取成功' })
   @ApiResponse({ status: 401, description: '未授权' })
   async getRealTimeData() {
-    return this.dashboardService.getRealTimeData();
+    const result = await this.dashboardService.getRealTimeData();
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 }

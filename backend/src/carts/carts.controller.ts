@@ -33,16 +33,28 @@ export class CartsController {
   @ApiResponse({ status: 201, description: '添加成功', type: Cart })
   @ApiResponse({ status: 400, description: '请求参数错误或库存不足' })
   @ApiResponse({ status: 404, description: '商品不存在' })
-  create(@Body() createCartDto: CreateCartDto): Promise<Cart> {
-    return this.cartsService.create(createCartDto);
+  async create(@Body() createCartDto: CreateCartDto) {
+    const result = await this.cartsService.create(createCartDto);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Get()
   @ApiOperation({ summary: '获取用户购物车列表' })
   @ApiQuery({ name: 'user_id', required: true, description: '用户ID', example: 1 })
   @ApiResponse({ status: 200, description: '获取成功', type: [Cart] })
-  findAllByUserId(@Query('user_id', ParseIntPipe) user_id: number): Promise<Cart[]> {
-    return this.cartsService.findAllByUserId(user_id);
+  async findAllByUserId(@Query('user_id', ParseIntPipe) user_id: number) {
+    const result = await this.cartsService.findAllByUserId(user_id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Patch(':id')
@@ -52,12 +64,18 @@ export class CartsController {
   @ApiResponse({ status: 200, description: '更新成功', type: Cart })
   @ApiResponse({ status: 400, description: '请求参数错误或库存不足' })
   @ApiResponse({ status: 404, description: '购物车商品不存在' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCartDto: UpdateCartDto,
     @Query('user_id', ParseIntPipe) user_id: number,
-  ): Promise<Cart> {
-    return this.cartsService.update(id, updateCartDto, user_id);
+  ) {
+    const result = await this.cartsService.update(id, updateCartDto, user_id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Delete(':id')
@@ -67,8 +85,14 @@ export class CartsController {
   @ApiQuery({ name: 'user_id', required: true, description: '用户ID', example: 1 })
   @ApiResponse({ status: 204, description: '删除成功' })
   @ApiResponse({ status: 404, description: '购物车商品不存在' })
-  remove(@Param('id', ParseIntPipe) id: number, @Query('user_id', ParseIntPipe) user_id: number): Promise<void> {
-    return this.cartsService.remove(id, user_id);
+  async remove(@Param('id', ParseIntPipe) id: number, @Query('user_id', ParseIntPipe) user_id: number) {
+    await this.cartsService.remove(id, user_id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: null
+    };
   }
 
   @Delete()
@@ -76,8 +100,14 @@ export class CartsController {
   @ApiOperation({ summary: '清空购物车' })
   @ApiQuery({ name: 'user_id', required: true, description: '用户ID', example: 1 })
   @ApiResponse({ status: 204, description: '清空成功' })
-  clear(@Query('user_id', ParseIntPipe) user_id: number): Promise<void> {
-    return this.cartsService.clear(user_id);
+  async clear(@Query('user_id', ParseIntPipe) user_id: number) {
+    await this.cartsService.clear(user_id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: null
+    };
   }
 
   @Patch('selected')
@@ -85,12 +115,18 @@ export class CartsController {
   @ApiQuery({ name: 'user_id', required: true, description: '用户ID', example: 1 })
   @ApiResponse({ status: 200, description: '更新成功' })
   @ApiResponse({ status: 400, description: '请求参数错误' })
-  updateMultipleSelected(
+  async updateMultipleSelected(
     @Body('ids') ids: number[],
     @Body('selected') selected: boolean,
     @Query('user_id', ParseIntPipe) user_id: number,
-  ): Promise<void> {
-    return this.cartsService.updateMultipleSelected(ids, selected, user_id);
+  ) {
+    await this.cartsService.updateMultipleSelected(ids, selected, user_id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: null
+    };
   }
 
   @Delete('batch')
@@ -99,10 +135,16 @@ export class CartsController {
   @ApiQuery({ name: 'user_id', required: true, description: '用户ID', example: 1 })
   @ApiResponse({ status: 204, description: '删除成功' })
   @ApiResponse({ status: 400, description: '请求参数错误' })
-  removeMultiple(
+  async removeMultiple(
     @Body('ids') ids: number[],
     @Query('user_id', ParseIntPipe) user_id: number,
-  ): Promise<void> {
-    return this.cartsService.removeMultiple(ids, user_id);
+  ) {
+    await this.cartsService.removeMultiple(ids, user_id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: null
+    };
   }
 }

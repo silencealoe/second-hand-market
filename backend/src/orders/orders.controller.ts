@@ -17,31 +17,55 @@ export class OrdersController {
   @ApiResponse({ status: 400, description: '库存不足或参数错误' })
   @ApiResponse({ status: 404, description: '商品不存在' })
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.createOrder(createOrderDto)
+  async create(@Body() createOrderDto: CreateOrderDto) {
+    const result = await this.ordersService.createOrder(createOrderDto)
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    }
   }
 
   @ApiOperation({ summary: '获取用户订单列表' })
   @ApiResponse({ status: 200, description: '获取成功', type: [Order] })
   @Get('user/:userId')
-  getUserOrders(@Param('userId') userId: string) {
-    return this.ordersService.getUserOrders(parseInt(userId))
+  async getUserOrders(@Param('userId') userId: string) {
+    const result = await this.ordersService.getUserOrders(parseInt(userId))
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    }
   }
 
   @ApiOperation({ summary: '获取订单详情' })
   @ApiResponse({ status: 200, description: '获取成功', type: Order })
   @ApiResponse({ status: 404, description: '订单不存在' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(parseInt(id))
+  async findOne(@Param('id') id: string) {
+    const result = await this.ordersService.findOne(parseInt(id))
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    }
   }
 
   @ApiOperation({ summary: '更新订单' })
   @ApiResponse({ status: 200, description: '更新成功', type: Order })
   @ApiResponse({ status: 404, description: '订单不存在' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.ordersService.update(parseInt(id), updateOrderDto)
+  async update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
+    const result = await this.ordersService.update(parseInt(id), updateOrderDto)
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    }
   }
 
   @ApiOperation({ summary: '取消订单' })
@@ -49,8 +73,14 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: '订单不存在' })
   @ApiResponse({ status: 400, description: '只有待付款的订单才能取消' })
   @Patch(':id/cancel')
-  cancelOrder(@Param('id') id: string) {
-    return this.ordersService.cancelOrder(parseInt(id))
+  async cancelOrder(@Param('id') id: string) {
+    const result = await this.ordersService.cancelOrder(parseInt(id))
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    }
   }
 
   @ApiOperation({ summary: '确认支付' })
@@ -58,16 +88,28 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: '订单不存在' })
   @ApiResponse({ status: 400, description: '只有待付款的订单才能确认支付' })
   @Patch(':id/confirm-payment')
-  confirmPayment(@Param('id') id: string) {
-    return this.ordersService.confirmPayment(parseInt(id))
+  async confirmPayment(@Param('id') id: string) {
+    const result = await this.ordersService.confirmPayment(parseInt(id))
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    }
   }
 
   @ApiOperation({ summary: '删除订单' })
   @ApiResponse({ status: 200, description: '删除成功' })
   @ApiResponse({ status: 404, description: '订单不存在' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ordersService.remove(parseInt(id))
+  async remove(@Param('id') id: string) {
+    const result = await this.ordersService.remove(parseInt(id))
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    }
   }
 
   @ApiOperation({ summary: '支付宝支付' })

@@ -75,8 +75,11 @@ export class UploadController {
     });
 
     return {
-      urls: imageUrls,
-      message: '上传成功',
+      code: 200,
+      message: 'success',
+      data: {
+        urls: imageUrls
+      }
     };
   }
 }

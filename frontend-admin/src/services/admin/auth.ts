@@ -1,4 +1,4 @@
-import { request } from 'umi';
+import request from '@/utils/request';
 
 // 登录请求参数
 interface LoginParams {
@@ -8,16 +8,12 @@ interface LoginParams {
 
 // 登录响应
 interface LoginResponse {
-  success: boolean;
-  message?: string;
-  data?: {
-    token: string;
-    user: {
-      id: number;
-      username: string;
-      name: string;
-      role: string;
-    };
+  token: string;
+  user: {
+    id: number;
+    username: string;
+    name: string;
+    role: string;
   };
 }
 

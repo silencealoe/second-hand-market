@@ -36,8 +36,14 @@ export class ProductsController {
   @Post()
   @ApiOperation({ summary: '创建商品' })
   @ApiResponse({ status: 201, description: '商品创建成功', type: Product })
-  create(@Body(CustomValidationPipe) createProductDto: CreateProductDto): Promise<Product> {
-    return this.productsService.create(createProductDto);
+  async create(@Body(CustomValidationPipe) createProductDto: CreateProductDto) {
+    const result = await this.productsService.create(createProductDto);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Get()
@@ -55,7 +61,7 @@ export class ProductsController {
   @ApiQuery({ name: 'sort_order', required: false, description: '排序方式：ASC, DESC', example: 'DESC' })
   @ApiResponse({ status: 200, description: '获取成功' })
   @Public()
-  findAll(
+  async findAll(
     @Query('status') status?: ProductStatus,
     @Query('category') category?: string,
     @Query('user_id') userId?: string,
@@ -74,7 +80,7 @@ export class ProductsController {
     const minPriceNum = minPrice && minPrice.trim() !== '' ? parseFloat(minPrice) : undefined;
     const maxPriceNum = maxPrice && maxPrice.trim() !== '' ? parseFloat(maxPrice) : undefined;
     
-    return this.productsService.findAll(
+    const result = await this.productsService.findAll(
       status,
       category,
       userIdNum,
@@ -87,6 +93,12 @@ export class ProductsController {
       sortBy,
       sortOrder,
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Get(':id')
@@ -95,8 +107,14 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: '获取成功', type: Product })
   @ApiResponse({ status: 404, description: '商品不存在' })
   @Public()
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Product> {
-    return this.productsService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.productsService.findOne(id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Patch(':id')
@@ -104,11 +122,17 @@ export class ProductsController {
   @ApiParam({ name: 'id', type: 'number', description: '商品ID' })
   @ApiResponse({ status: 200, description: '更新成功', type: Product })
   @ApiResponse({ status: 404, description: '商品不存在' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductDto: UpdateProductDto,
-  ): Promise<Product> {
-    return this.productsService.update(id, updateProductDto);
+  ) {
+    const result = await this.productsService.update(id, updateProductDto);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Delete(':id')
@@ -117,8 +141,14 @@ export class ProductsController {
   @ApiParam({ name: 'id', type: 'number', description: '商品ID' })
   @ApiResponse({ status: 204, description: '删除成功' })
   @ApiResponse({ status: 404, description: '商品不存在' })
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.productsService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.productsService.remove(id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: null
+    };
   }
 }
 

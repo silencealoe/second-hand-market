@@ -60,12 +60,18 @@ export class AdminUserController {
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
     
-    return this.adminUserService.create(
+    const result = await this.adminUserService.create(
       createAdminUserDto,
       currentUserId,
       ipAddress,
       userAgent
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -94,13 +100,19 @@ export class AdminUserController {
     @Query('roleId') roleId?: number,
     @Query('status') status?: number
   ) {
-    return this.adminUserService.findAll({
+    const result = await this.adminUserService.findAll({
       page: Number(pageQueryParams.page || 1),
       limit: Number(pageQueryParams.limit || 10),
       search: pageQueryParams.search,
       roleId,
       status,
     });
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -117,7 +129,13 @@ export class AdminUserController {
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 404, description: '用户不存在' })
   async findOne(@Param('id') id: string) {
-    return this.adminUserService.findOne(+id);
+    const result = await this.adminUserService.findOne(+id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -145,13 +163,19 @@ export class AdminUserController {
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
     
-    return this.adminUserService.update(
+    const result = await this.adminUserService.update(
       +id,
       updateAdminUserDto,
       currentUserId,
       ipAddress,
       userAgent
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -174,12 +198,18 @@ export class AdminUserController {
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
     
-    return this.adminUserService.remove(
+    const result = await this.adminUserService.remove(
       +id,
       currentUserId,
       ipAddress,
       userAgent
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -202,12 +232,18 @@ export class AdminUserController {
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
     
-    return this.adminUserService.resetPassword(
+    const result = await this.adminUserService.resetPassword(
       +id,
       currentUserId,
       ipAddress,
       userAgent
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   /**
@@ -236,12 +272,18 @@ export class AdminUserController {
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
     
-    return this.adminUserService.toggleStatus(
+    const result = await this.adminUserService.toggleStatus(
       +id,
       status,
       currentUserId,
       ipAddress,
       userAgent
     );
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 }

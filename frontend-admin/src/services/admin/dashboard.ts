@@ -1,4 +1,4 @@
-import { request } from 'umi';
+import request from '@/utils/request';
 
 // 核心指标接口参数
 interface CoreMetricsParams {
@@ -8,50 +8,41 @@ interface CoreMetricsParams {
 
 // 核心指标响应
 interface CoreMetricsResponse {
-  success: boolean;
-  data?: {
-    todayOrders: number;
-    todayRevenue: number;
-    totalUsers: number;
-    totalProducts: number;
-    orderGrowthRate: number;
-    revenueGrowthRate: number;
-    userGrowthRate: number;
-    productGrowthRate: number;
-  };
+  todayOrders: number;
+  todayRevenue: number;
+  totalUsers: number;
+  totalProducts: number;
+  orderGrowthRate: number;
+  revenueGrowthRate: number;
+  userGrowthRate: number;
+  productGrowthRate: number;
 }
 
 // 销售趋势接口参数
 interface SalesTrendParams {
-  startDate?: string;
-  endDate?: string;
-  dimension?: 'hour' | 'day' | 'month';
+  period?: 'day' | 'week' | 'month';
+}
+
+// 销售趋势响应数据项
+interface SalesTrendItem {
+  date: string;
+  orderCount: number;
+  salesCount: number;
+  revenue: number;
 }
 
 // 销售趋势响应
-interface SalesTrendResponse {
-  success: boolean;
-  data?: {
-    labels: string[];
-    orderData: number[];
-    revenueData: number[];
-  };
-}
+type SalesTrendResponse = SalesTrendItem[];
 
 // 分类分布接口参数
 interface CategoryDistributionParams {
-  startDate?: string;
-  endDate?: string;
-  type?: 'sales' | 'revenue';
+  // 后端不接受参数
 }
 
 // 分类分布响应
 interface CategoryDistributionResponse {
-  success: boolean;
-  data?: {
-    categories: string[];
-    values: number[];
-  };
+  categories: string[];
+  values: number[];
 }
 
 // 核心指标API
@@ -80,8 +71,6 @@ export async function getCategoryDistribution(params?: CategoryDistributionParam
 
 // TOP商品API
 export async function getTopProducts(params?: {
-  startDate?: string;
-  endDate?: string;
   limit?: number;
 }): Promise<any> {
   return request('/admin/dashboard/top-products', {

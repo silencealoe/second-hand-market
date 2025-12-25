@@ -37,8 +37,14 @@ export class UsersController {
   @ApiResponse({ status: 201, description: '注册成功', type: LoginResponseDto })
   @ApiResponse({ status: 409, description: '用户名或邮箱已存在' })
   @Public()
-  register(@Body() registerDto: RegisterDto): Promise<LoginResponseDto> {
-    return this.authService.register(registerDto);
+  async register(@Body() registerDto: RegisterDto) {
+    const result = await this.authService.register(registerDto);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Post('login')
@@ -47,15 +53,27 @@ export class UsersController {
   @ApiResponse({ status: 200, description: '登录成功', type: LoginResponseDto })
   @ApiResponse({ status: 401, description: '用户名或密码错误' })
   @Public()
-  login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto) {
+    const result = await this.authService.login(loginDto);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Get()
   @ApiOperation({ summary: '获取所有用户列表' })
   @ApiResponse({ status: 200, description: '获取成功', type: [User] })
-  findAll(): Promise<User[]> {
-    return this.usersService.findAll();
+  async findAll() {
+    const result = await this.usersService.findAll();
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Get(':id')
@@ -63,8 +81,14 @@ export class UsersController {
   @ApiParam({ name: 'id', type: 'number', description: '用户ID' })
   @ApiResponse({ status: 200, description: '获取成功', type: User })
   @ApiResponse({ status: 404, description: '用户不存在' })
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<User> {
-    return this.usersService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const result = await this.usersService.findOne(id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Patch(':id')
@@ -73,11 +97,17 @@ export class UsersController {
   @ApiResponse({ status: 200, description: '更新成功', type: User })
   @ApiResponse({ status: 404, description: '用户不存在' })
   @ApiResponse({ status: 409, description: '邮箱已被其他用户使用' })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<User> {
-    return this.usersService.update(id, updateUserDto);
+  ) {
+    const result = await this.usersService.update(id, updateUserDto);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
   }
 
   @Delete(':id')
@@ -86,8 +116,14 @@ export class UsersController {
   @ApiParam({ name: 'id', type: 'number', description: '用户ID' })
   @ApiResponse({ status: 204, description: '删除成功' })
   @ApiResponse({ status: 404, description: '用户不存在' })
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.usersService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.usersService.remove(id);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: null
+    };
   }
 }
 

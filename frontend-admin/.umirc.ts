@@ -4,10 +4,22 @@ export default defineConfig({
   antd: {},
   access: {},
   model: {},
+  layout: {
+    title: '二手商城后台管理系统',
+    logo: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
+  },
+  mfsu: false,
   initialState: {},
   request: {},
-  layout: {
-    title: '@umijs/max',
+  // 代理配置，将/api路径代理到后端3000端口
+  proxy: {
+    '/api': {
+      target: 'http://localhost:3000',
+      changeOrigin: true,
+      pathRewrite: {
+        '^/api': '',
+      },
+    },
   },
   routes: [
     {
@@ -23,17 +35,7 @@ export default defineConfig({
     {
       name: '首页',
       path: '/home',
-      component: './Home',
-    },
-    {
-      name: '权限演示',
-      path: '/access',
-      component: './Access',
-    },
-    {
-      name: ' CRUD 示例',
-      path: '/table',
-      component: './Table',
+      component: '@/pages/Home',
     },
   ],
   npmClient: 'pnpm',

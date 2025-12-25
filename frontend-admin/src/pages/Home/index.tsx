@@ -13,31 +13,33 @@ interface CoreMetricsData {
   todayOrders: number;
   todayRevenue: number;
   totalUsers: number;
-  totalProducts: number;
-  orderGrowthRate: number;
-  revenueGrowthRate: number;
-  userGrowthRate: number;
-  productGrowthRate: number;
+  activeProducts: number; // 后端返回的是activeProducts而不是totalProducts
+  orderGrowthRate?: number; // 这些增长率字段后端可能不返回
+  revenueGrowthRate?: number;
+  userGrowthRate?: number;
+  productGrowthRate?: number;
 }
 
-interface SalesTrendData {
-  labels: string[];
-  orderData: number[];
-  revenueData: number[];
-}
+type SalesTrendData = {
+  date: string;
+  orderCount: number;
+  salesCount: number;
+  revenue: number;
+}[]
 
-interface CategoryDistributionData {
-  categories: string[];
-  values: number[];
-}
+type CategoryDistributionData = {
+  categoryName: string;
+  productCount: number;
+  percentage: number;
+}[]
 
 interface TopProduct {
-  id: number;
-  name: string;
-  category: string;
-  sales: number;
-  revenue: number;
+  productId: number;
+  productName: string;
+  categoryName: string;
   price: number;
+  viewCount: number;
+  likeCount: number;
 }
 
 const HomePage: React.FC = () => {
@@ -50,7 +52,7 @@ const HomePage: React.FC = () => {
   
   // 筛选条件
   const [dateRange, setDateRange] = useState<[Date, Date] | null>(null);
-  const [dimension, setDimension] = useState<'hour' | 'day' | 'month'>('day');
+  const [dimension, setDimension] = useState<'week' | 'day' | 'month'>('day');
   const [distributionType, setDistributionType] = useState<'sales' | 'revenue'>('sales');
 
   // 获取核心指标数据
@@ -62,9 +64,7 @@ const HomePage: React.FC = () => {
       } : {};
       
       const response = await getCoreMetrics(params);
-      if (response.success && response.data) {
-        setCoreMetrics(response.data);
-      }
+      setCoreMetrics(response);
     } catch (error) {
       message.error('获取核心指标失败');
       console.error(error);
@@ -74,18 +74,15 @@ const HomePage: React.FC = () => {
   // 获取销售趋势数据
   const fetchSalesTrend = async () => {
     try {
+      // 注意：后端使用的参数名是period而不是dimension，且不支持hour选项
+      // const period = dimension === 'hour' ? 'day' : dimension;
+      
       const params = {
-        dimension,
-        ...(dateRange ? {
-          startDate: dateRange[0].toISOString().split('T')[0],
-          endDate: dateRange[1].toISOString().split('T')[0],
-        } : {}),
+        period: dimension
       };
       
       const response = await getSalesTrend(params);
-      if (response.success && response.data) {
-        setSalesTrend(response.data);
-      }
+      setSalesTrend(response);
     } catch (error) {
       message.error('获取销售趋势失败');
       console.error(error);
@@ -95,18 +92,11 @@ const HomePage: React.FC = () => {
   // 获取分类分布数据
   const fetchCategoryDistribution = async () => {
     try {
-      const params = {
-        type: distributionType,
-        ...(dateRange ? {
-          startDate: dateRange[0].toISOString().split('T')[0],
-          endDate: dateRange[1].toISOString().split('T')[0],
-        } : {}),
-      };
+      // 注意：后端不接受type参数
+      const params = {};
       
       const response = await getCategoryDistribution(params);
-      if (response.success && response.data) {
-        setCategoryDistribution(response.data);
-      }
+      setCategoryDistribution(response);
     } catch (error) {
       message.error('获取分类分布失败');
       console.error(error);
@@ -116,16 +106,13 @@ const HomePage: React.FC = () => {
   // 获取TOP商品数据
   const fetchTopProducts = async () => {
     try {
-      const params = dateRange ? {
-        startDate: dateRange[0].toISOString().split('T')[0],
-        endDate: dateRange[1].toISOString().split('T')[0],
+      // 注意：后端只接受limit参数，不接受startDate和endDate
+      const params = {
         limit: 10,
-      } : {};
+      };
       
       const response = await getTopProducts(params);
-      if (response.success && response.data) {
-        setTopProducts(response.data);
-      }
+      setTopProducts(response);
     } catch (error) {
       message.error('获取TOP商品失败');
       console.error(error);
@@ -159,11 +146,10 @@ const HomePage: React.FC = () => {
 
   // TOP商品表格列配置
   const topProductColumns = [
-    { title: '商品ID', dataIndex: 'id', key: 'id' },
-    { title: '商品名称', dataIndex: 'name', key: 'name' },
-    { title: '分类', dataIndex: 'category', key: 'category' },
-    { title: '销量', dataIndex: 'sales', key: 'sales' },
-    { title: '成交额', dataIndex: 'revenue', key: 'revenue' },
+    { title: '商品ID', dataIndex: 'productId', key: 'productId' },
+    { title: '商品名称', dataIndex: 'productName', key: 'productName' },
+    { title: '分类', dataIndex: 'categoryName', key: 'categoryName' },
+    { title: '浏览量', dataIndex: 'viewCount', key: 'viewCount' },
     { title: '单价', dataIndex: 'price', key: 'price' },
   ];
 
@@ -171,9 +157,9 @@ const HomePage: React.FC = () => {
     <PageContainer ghost>
       <div className={styles.container}>
         {/* 筛选区域 */}
-        <div className={styles.filterArea}>
+        <div className={styles.filterArea} style={{ marginBottom: 24 }}>
           <RangePicker
-            value={dateRange}
+            value={dateRange ? [dateRange[0] as any, dateRange[1] as any] : undefined}
             onChange={(dates) => setDateRange(dates as [Date, Date] | null)}
             style={{ marginRight: 16 }}
           />
@@ -182,8 +168,8 @@ const HomePage: React.FC = () => {
             onChange={(value) => setDimension(value)}
             style={{ width: 120, marginRight: 16 }}
           >
-            <Option value="hour">今日（小时）</Option>
-            <Option value="day">七日（天）</Option>
+            <Option value="day">今日（小时）</Option>
+            <Option value="week">七日（天）</Option>
             <Option value="month">月度（日）</Option>
           </Select>
           <Select
@@ -215,7 +201,7 @@ const HomePage: React.FC = () => {
                         <ArrowDownOutlined style={{ color: '#ff4d4f' }} />
                       )
                     )}
-                    {coreMetrics?.orderGrowthRate && Math.abs(coreMetrics.orderGrowthRate)}%
+                    {coreMetrics?.orderGrowthRate && Math.abs(coreMetrics.orderGrowthRate)}
                   </span>
                 }
                 valueStyle={{ color: '#3f8600' }}
@@ -238,7 +224,7 @@ const HomePage: React.FC = () => {
                         <ArrowDownOutlined style={{ color: '#ff4d4f' }} />
                       )
                     )}
-                    {coreMetrics?.revenueGrowthRate && Math.abs(coreMetrics.revenueGrowthRate)}%
+                    {coreMetrics?.revenueGrowthRate && Math.abs(coreMetrics.revenueGrowthRate)}
                   </span>
                 }
                 valueStyle={{ color: '#1890ff' }}
@@ -259,7 +245,7 @@ const HomePage: React.FC = () => {
                         <ArrowDownOutlined style={{ color: '#ff4d4f' }} />
                       )
                     )}
-                    {coreMetrics?.userGrowthRate && Math.abs(coreMetrics.userGrowthRate)}%
+                    {coreMetrics?.userGrowthRate && Math.abs(coreMetrics.userGrowthRate)}
                   </span>
                 }
                 valueStyle={{ color: '#722ed1' }}
@@ -270,7 +256,7 @@ const HomePage: React.FC = () => {
             <Card>
               <Statistic
                 title="在售商品数"
-                value={coreMetrics?.totalProducts || 0}
+                value={coreMetrics?.activeProducts || 0}
                 suffix={
                   <span>
                     {coreMetrics?.productGrowthRate && (
@@ -280,7 +266,7 @@ const HomePage: React.FC = () => {
                         <ArrowDownOutlined style={{ color: '#ff4d4f' }} />
                       )
                     )}
-                    {coreMetrics?.productGrowthRate && Math.abs(coreMetrics.productGrowthRate)}%
+                    {coreMetrics?.productGrowthRate && Math.abs(coreMetrics.productGrowthRate)}
                   </span>
                 }
                 valueStyle={{ color: '#eb2f96' }}
@@ -296,22 +282,27 @@ const HomePage: React.FC = () => {
               {salesTrend && (
                 <LineChart
                   title="销量与成交额趋势"
-                  xAxisData={salesTrend.labels}
+                  xAxisData={salesTrend.map(item => item.date)}
                   series={[
                     {
                       name: '订单数',
-                      data: salesTrend.orderData,
+                      data: salesTrend.map(item => item.orderCount),
                       color: '#52c41a',
                     },
                     {
+                      name: '销量',
+                      data: salesTrend.map(item => item.salesCount),
+                      color: '#faad14',
+                    },
+                    {
                       name: '成交额',
-                      data: salesTrend.revenueData,
+                      data: salesTrend.map(item => item.revenue),
                       color: '#1890ff',
                       yAxisIndex: 1,
                     },
                   ]}
                   yAxis={[
-                    { name: '订单数' },
+                    { name: '数量' },
                     { name: '成交额(元)' },
                   ]}
                 />
@@ -322,10 +313,10 @@ const HomePage: React.FC = () => {
             <Card title="分类占比" loading={loading}>
               {categoryDistribution && (
                 <PieChart
-                  title={`${distributionType === 'sales' ? '销量' : '成交额'}分类占比`}
-                  data={categoryDistribution.categories.map((category, index) => ({
-                    name: category,
-                    value: categoryDistribution.values[index],
+                  title="商品分类占比"
+                  data={categoryDistribution.map(item => ({
+                    name: item.categoryName,
+                    value: item.productCount,
                   }))}
                 />
               )}
@@ -338,7 +329,7 @@ const HomePage: React.FC = () => {
           <Table
             columns={topProductColumns}
             dataSource={topProducts}
-            rowKey="id"
+            rowKey="productId"
             pagination={false}
           />
         </Card>

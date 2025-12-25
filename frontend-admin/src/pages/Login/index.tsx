@@ -13,14 +13,18 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       const response = await login(values);
-      if (response.success) {
+      console.log('登录响应:', response);
+      if (response && response.token) {
+        // 保存token到localStorage
+        localStorage.setItem('token', response.token);
         message.success('登录成功');
         navigate('/home');
       } else {
-        message.error(response.message || '登录失败');
+        message.error('登录失败：未获取到登录令牌');
       }
     } catch (error) {
       message.error('登录失败，请检查账号密码');
+      console.error('登录错误:', error);
     } finally {
       setLoading(false);
     }
