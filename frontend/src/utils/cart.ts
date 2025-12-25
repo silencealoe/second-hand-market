@@ -30,7 +30,7 @@ const fetchCartList = async () => {
     const response = await cartAPI.getCartListAPI(userId)
     
     // 将后端返回的数据转换为前端需要的格式
-    cartState.items = response.map((item: any) => ({
+    cartState.items = response.data.map((item: any) => ({
       id: item.id,
       product: item.product,
       quantity: item.quantity,

@@ -241,11 +241,11 @@ const loadMore = async () => {
     }
     
     // 处理响应数据
-    if (res && res.data && Array.isArray(res.data)) {
-      if (res.data.length === 0) {
+    if (res && res.data && Array.isArray(res.data.data)) {
+      if (res.data.data.length === 0) {
         hasMore.value = false
       } else {
-        products.value = [...products.value, ...res.data]
+        products.value = [...products.value, ...res.data.data]
         // 检查是否还有更多数据
         if (page.value >= res.totalPages) {
           hasMore.value = false

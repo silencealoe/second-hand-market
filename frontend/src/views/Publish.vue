@@ -209,7 +209,7 @@ watch(imageList.value, async (newList) => {
 
 const handleImageSuccess = (res: any) => {
   console.log('图片上传成功:', res)
-  const resUrls = JSON.parse(res.responseText).urls;
+  const resUrls = JSON.parse(res.responseText).data.urls;
   uploadedImages.value = resUrls;
 }
 const handleImageChange = (files: any) => {
