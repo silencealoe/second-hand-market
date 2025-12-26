@@ -116,10 +116,10 @@ const loadOrders = async () => {
   }
 
   try {
-    const res = await getUserOrdersAPI(user.id)
+    const res: any = await getUserOrdersAPI(user.id)
     // 接口直接返回订单数组，因此不再从 data 字段取值
     console.log('Orders response:', res)
-    orders.value = res.data || []
+    orders.value = res || []
   } catch (error) {
     console.error('加载订单失败:', error)
     showToast.fail('加载订单失败')

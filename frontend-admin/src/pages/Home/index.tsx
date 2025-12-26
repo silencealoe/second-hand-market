@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Row, Col, Statistic, Select, DatePicker, Button, Table, message } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined, DownloadOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { getCoreMetrics, getSalesTrend, getCategoryDistribution, getTopProducts, exportSalesTrend } from '@/services/admin/dashboard';
+import { getCoreMetrics, getSalesTrend, getCategoryDistribution, getTopProducts, exportSalesTrend, getOrderStatusDistribution } from '@/services/admin/dashboard';
 import { LineChart, PieChart } from '@/components/Charts';
 import styles from './index.less';
 
@@ -33,13 +33,22 @@ type CategoryDistributionData = {
   percentage: number;
 }[]
 
+type OrderStatusDistributionData = {
+  status: string;
+  name: string;
+  count: number;
+  percentage: number;
+}[]
+
 interface TopProduct {
   productId: number;
   productName: string;
   categoryName: string;
   price: number;
-  viewCount: number;
-  likeCount: number;
+  images: string[];
+  orderCount: number;
+  salesCount: number;
+  totalRevenue: number;
 }
 
 const HomePage: React.FC = () => {
@@ -48,6 +57,7 @@ const HomePage: React.FC = () => {
   const [coreMetrics, setCoreMetrics] = useState<CoreMetricsData | null>(null);
   const [salesTrend, setSalesTrend] = useState<SalesTrendData | null>(null);
   const [categoryDistribution, setCategoryDistribution] = useState<CategoryDistributionData | null>(null);
+  const [orderStatusDistribution, setOrderStatusDistribution] = useState<OrderStatusDistributionData | null>(null);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   
   // 筛选条件
@@ -122,6 +132,21 @@ const HomePage: React.FC = () => {
     }
   };
 
+  // 获取订单状态分布数据
+  const fetchOrderStatusDistribution = async () => {
+    try {
+      const params = {
+        period: dimension,
+      };
+      
+      const response = await getOrderStatusDistribution(params);
+      setOrderStatusDistribution(response);
+    } catch (error) {
+      message.error('获取订单状态分布失败');
+      console.error(error);
+    }
+  };
+
   // 刷新所有数据
   const refreshData = async () => {
     setLoading(true);
@@ -130,6 +155,7 @@ const HomePage: React.FC = () => {
         fetchCoreMetrics(),
         fetchSalesTrend(),
         fetchCategoryDistribution(),
+        fetchOrderStatusDistribution(),
         fetchTopProducts(),
       ]);
     } finally {
@@ -185,11 +211,34 @@ const HomePage: React.FC = () => {
   // TOP商品表格列配置
   const topProductColumns = [
     { title: '商品ID', dataIndex: 'productId', key: 'productId' },
+    { 
+      title: '商品图片', 
+      dataIndex: 'images', 
+      key: 'images',
+      render: (images: string[]) => {
+        if (images && images.length > 0) {
+          return <img src={images[0]} alt="商品缩略图" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
+        }
+        return '无图片';
+      }
+    },
     { title: '商品名称', dataIndex: 'productName', key: 'productName' },
     { title: '分类', dataIndex: 'categoryName', key: 'categoryName' },
-    { title: '浏览量', dataIndex: 'viewCount', key: 'viewCount' },
     { title: '单价', dataIndex: 'price', key: 'price' },
+    { title: '订单数量', dataIndex: 'orderCount', key: 'orderCount' },
+    { title: '销量', dataIndex: 'salesCount', key: 'salesCount' },
+    { title: '总销售额', dataIndex: 'totalRevenue', key: 'totalRevenue' },
   ];
+
+  // 根据dimension获取时间范围标题
+  const getTimeRangeTitle = (baseTitle: string) => {
+    const dimensionMap: Record<string, string> = {
+      day: '今日',
+      week: '本周',
+      month: '本月'
+    };
+    return `${dimensionMap[dimension]}${baseTitle}`;
+  };
 
   return (
     <PageContainer ghost>
@@ -228,7 +277,7 @@ const HomePage: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="今日订单数"
+                title={getTimeRangeTitle('订单数')}
                 value={coreMetrics?.todayOrders || 0}
                 suffix={
                   <span>
@@ -249,7 +298,7 @@ const HomePage: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="今日成交额"
+                title={getTimeRangeTitle('成交额')}
                 value={coreMetrics?.todayRevenue || 0}
                 precision={2}
                 prefix="¥"
@@ -272,7 +321,7 @@ const HomePage: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="新增用户数"
+                title={getTimeRangeTitle('新增用户数')}
                 value={coreMetrics?.totalUsers || 0}
                 suffix={
                   <span>
@@ -293,7 +342,7 @@ const HomePage: React.FC = () => {
           <Col span={6}>
             <Card>
               <Statistic
-                title="新增在售商品数"
+                title={getTimeRangeTitle('新增在售商品数')}
                 value={coreMetrics?.activeProducts || 0}
                 suffix={
                   <span>
@@ -314,8 +363,9 @@ const HomePage: React.FC = () => {
         </Row>
 
         {/* 图表区域 */}
+        {/* 销量趋势图表 - 独占一行 */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col span={16}>
+          <Col span={24}>
             <Card 
               title="销量趋势" 
               loading={loading}
@@ -359,7 +409,11 @@ const HomePage: React.FC = () => {
               )}
             </Card>
           </Col>
-          <Col span={8}>
+        </Row>
+
+        {/* 环形图表 - 两个图表并排显示，各占12列 */}
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col span={12}>
             <Card title="分类占比" loading={loading}>
               {categoryDistribution && (
                 <PieChart
@@ -368,6 +422,24 @@ const HomePage: React.FC = () => {
                     name: item.categoryName,
                     value: item.productCount,
                   }))}
+                  height="300px"
+                  showLabelLine={true}
+                />
+              )}
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card title="订单状态分布" loading={loading}>
+              {orderStatusDistribution && (
+                <PieChart
+                  title="支付与取消订单占比"
+                  data={orderStatusDistribution.map(item => ({
+                    name: item.name,
+                    value: item.count,
+                  }))}
+                  colors={['#52c41a', '#ff4d4f']} // 支付成功绿色，取消订单红色
+                  height="300px"
+                  showLabelLine={true}
                 />
               )}
             </Card>

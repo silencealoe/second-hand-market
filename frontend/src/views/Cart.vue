@@ -181,6 +181,7 @@ const handleCheckout = async () => {
             shipping_address: user.address || '',
             payment_method: '微信支付'
           })
+          // 注意：这里不需要使用返回的订单数据，因为我们直接跳转到订单列表
         }
 
         showToast.success('结算成功，订单已生成')

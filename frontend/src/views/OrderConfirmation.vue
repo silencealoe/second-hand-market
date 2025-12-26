@@ -360,7 +360,7 @@ const handleConfirmPayment = async () => {
       try {
         // 调用支付宝支付接口
         const formHtml = await alipayPaymentAPI(order.value!.id)
-        
+        console.log('formHtml', formHtml)
         // 检查返回的HTML是否有效
         if (!formHtml || typeof formHtml !== 'string') {
           throw new Error('支付表单生成失败，请重试')

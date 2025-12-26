@@ -11,6 +11,8 @@ interface PieChartProps {
   data: PieChartData[];
   width?: string;
   height?: string;
+  colors?: string[];
+  showLabelLine?: boolean;
 }
 
 const PieChart: React.FC<PieChartProps> = ({
@@ -18,6 +20,8 @@ const PieChart: React.FC<PieChartProps> = ({
   data,
   width = '100%',
   height = '300px',
+  colors,
+  showLabelLine = false,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
@@ -49,15 +53,15 @@ const PieChart: React.FC<PieChartProps> = ({
           name: title,
           type: 'pie',
           radius: ['50%', '70%'],
-          avoidLabelOverlap: false,
+          avoidLabelOverlap: true,
           itemStyle: {
             borderRadius: 10,
             borderColor: '#fff',
             borderWidth: 2,
           },
           label: {
-            show: false,
-            position: 'center',
+            show: showLabelLine,
+            formatter: '{b}: {d}%',
           },
           emphasis: {
             label: {
@@ -67,9 +71,10 @@ const PieChart: React.FC<PieChartProps> = ({
             },
           },
           labelLine: {
-            show: false,
+            show: showLabelLine,
           },
           data: data,
+          color: colors, // 使用传入的自定义颜色
         },
       ],
     };
@@ -89,7 +94,7 @@ const PieChart: React.FC<PieChartProps> = ({
       window.removeEventListener('resize', handleResize);
       chartInstance.current?.dispose();
     };
-  }, [title, data]);
+  }, [title, data, colors, showLabelLine]);
 
   return (
     <div

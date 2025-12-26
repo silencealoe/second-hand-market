@@ -252,6 +252,11 @@ const handleBuy = () => {
     return
   }
 
+  // 防止重复提交
+  if (buying.value) {
+    return
+  }
+
   // 不能购买自己的商品
   if (product.value.user_id === user.id) {
     showToast.fail('不能购买自己发布的商品')

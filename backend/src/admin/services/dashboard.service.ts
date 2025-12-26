@@ -56,29 +56,21 @@ export class DashboardService {
       startDate.setHours(0, 0, 0, 0);
     }
     
-    // 今日订单数 - 使用QueryBuilder避免类型问题
+    // 订单数 - 根据period参数查询对应时间范围的数据
     const todayOrdersQuery = this.orderRepository
       .createQueryBuilder('order')
-      .where('order.created_at BETWEEN :todayStart AND :todayEnd', {
-        todayStart: new Date(new Date().setHours(0, 0, 0, 0)),
-        todayEnd: new Date(new Date().setHours(23, 59, 59, 999)),
-      })
-      .andWhere('order.created_at BETWEEN :start AND :end', {
+      .where('order.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
       });
 
     const todayOrders = await todayOrdersQuery.getCount();
 
-    // 今日成交额
+    // 成交额 - 根据period参数查询对应时间范围的数据
     const todayRevenueQuery = this.orderRepository
       .createQueryBuilder('order')
       .select('SUM(order.total_price)', 'total')
-      .where('order.created_at BETWEEN :todayStart AND :todayEnd', {
-        todayStart: new Date(new Date().setHours(0, 0, 0, 0)),
-        todayEnd: new Date(new Date().setHours(23, 59, 59, 999)),
-      })
-      .andWhere('order.status = :status', { status: 'completed' })
+      .where('order.status = :status', { status: 'paid' })
       .andWhere('order.created_at BETWEEN :start AND :end', {
         start: startDate,
         end: endDate,
@@ -206,8 +198,7 @@ export class DashboardService {
         start: startDate,
         end: endDate,
       })
-      // 暂时移除status筛选，看看是否能返回数据
-      // .andWhere('order.status = :status', { status: 'paid' })
+      .andWhere('order.status = :status', { status: 'paid' })
       .groupBy(groupBy)
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -346,7 +337,7 @@ export class DashboardService {
   }
 
   /**
-   * 获取热门商品排行（简化版本）
+   * 获取热门商品排行（基于已支付订单）
    * @param limit 限制数量
    * @param period 统计周期：day, week, month
    * @returns 热门商品排行
@@ -368,7 +359,7 @@ export class DashboardService {
         actualDays = 30; // 30天的数据
         break;
     }
-    
+
     // 计算开始日期
     let startDate: Date;
     if (period === 'day') {
@@ -381,28 +372,41 @@ export class DashboardService {
       startDate.setHours(0, 0, 0, 0);
     }
 
-    const results = await this.productRepository
-      .createQueryBuilder('product')
+    const results = await this.orderRepository
+      .createQueryBuilder('order')
       .select([
         'product.id as productId',
         'product.title as productName',
         'product.category as categoryName',
         'product.price as price',
-        'product.view_count as viewCount',
+        'product.images as images',
+        'COUNT(order.id) as orderCount',
+        'SUM(order.quantity) as salesCount',
+        'SUM(order.total_price) as totalRevenue',
       ])
-      .where('product.status = :status', { status: 'on_sale' })
-      .andWhere('product.created_at BETWEEN :start AND :end', { start: startDate, end: endDate })
-      .orderBy('product.view_count', 'DESC')
+      .innerJoin('order.product', 'product')
+      .where('order.status = :orderStatus', { orderStatus: 'paid' })
+      .andWhere('order.created_at BETWEEN :start AND :end', { start: startDate, end: endDate })
+      .groupBy('product.id')
+      .orderBy('salesCount', 'DESC')
+      .addOrderBy('totalRevenue', 'DESC')
       .limit(limit)
       .getRawMany();
+
+    // 如果没有数据，返回空数组
+    if (results.length === 0) {
+      return [];
+    }
 
     return results.map(item => ({
       productId: item.productId,
       productName: item.productName,
       categoryName: item.categoryName,
       price: parseFloat(item.price),
-      viewCount: parseInt(item.viewCount),
-      likeCount: 0, // 没有like_count字段，返回默认值
+      images: item.images || [],
+      orderCount: parseInt(item.orderCount),
+      salesCount: parseInt(item.salesCount),
+      totalRevenue: parseFloat(item.totalRevenue),
     }));
   }
 
@@ -458,7 +462,7 @@ export class DashboardService {
       .createQueryBuilder('order')
       .select('SUM(order.total_price)', 'total')
       .where('order.created_at >= :date', { date: oneHourAgo })
-      .andWhere('order.status = :status', { status: 'completed' })
+      .andWhere('order.status = :status', { status: 'paid' })
       .getRawOne();
 
     return {
@@ -504,6 +508,84 @@ export class DashboardService {
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
 
     return excelBuffer;
+  }
+
+  /**
+   * 获取订单状态分布数据（成功支付和取消订单占比）
+   * @param period 统计周期：day, week, month
+   * @returns 订单状态分布数据
+   */
+  async getOrderStatusDistribution(period: 'day' | 'week' | 'month' = 'day') {
+    const endDate = new Date();
+    
+    // 根据period参数调整统计天数
+    let actualDays: number;
+    switch (period) {
+      case 'day':
+        actualDays = 1; // 当天24小时的数据
+        break;
+      case 'week':
+        actualDays = 7; // 7天的数据
+        break;
+      case 'month':
+      default:
+        actualDays = 30; // 30天的数据
+        break;
+    }
+
+    // 计算开始日期
+    let startDate: Date;
+    if (period === 'day') {
+      // 当天24小时的数据，startDate是当天的开始时间（00:00:00）
+      startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      // 其他情况，根据实际天数计算startDate
+      startDate = new Date(endDate.getTime() - (actualDays - 1) * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    // 查询订单状态分布数据
+    const results = await this.orderRepository
+      .createQueryBuilder('order')
+      .select([
+        'order.status as status',
+        'COUNT(*) as count',
+      ])
+      .where('order.created_at BETWEEN :start AND :end', { start: startDate, end: endDate })
+      .andWhere('order.status IN (:...statuses)', { statuses: ['paid', 'cancelled'] })
+      .groupBy('order.status')
+      .getRawMany();
+
+    // 计算总订单数
+    const total = results.reduce((sum, item) => sum + parseInt(item.count), 0);
+
+    // 转换结果格式，确保包含所有需要的状态
+    const statusMap: Record<string, number> = {
+      paid: 0,
+      cancelled: 0
+    };
+
+    // 填充实际数据
+    results.forEach(item => {
+      statusMap[item.status] = parseInt(item.count);
+    });
+
+    // 返回格式化的数据
+    return [
+      {
+        status: 'paid',
+        name: '成功支付',
+        count: statusMap.paid,
+        percentage: total > 0 ? (statusMap.paid / total) * 100 : 0
+      },
+      {
+        status: 'cancelled',
+        name: '取消订单',
+        count: statusMap.cancelled,
+        percentage: total > 0 ? (statusMap.cancelled / total) * 100 : 0
+      }
+    ];
   }
 
   /**

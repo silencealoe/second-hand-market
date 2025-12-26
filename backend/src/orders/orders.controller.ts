@@ -6,6 +6,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { Order } from './entities/order.entity'
 import { AlipayService } from './alipay.service'
 import { Response } from 'express'
+import { Public } from '../common/decorators/public.decorator'
 
 @ApiTags('订单')
 @Controller('orders')
@@ -163,6 +164,7 @@ export class OrdersController {
   }
 
   @ApiOperation({ summary: '支付宝异步通知' })
+  @Public() // 设置为公共接口，不需要JWT认证
   @Post('alipay/notify')
   async alipayNotify(@Req() req: any) {
     console.log('收到支付宝异步通知:', JSON.stringify(req.body))
@@ -212,6 +214,7 @@ export class OrdersController {
   }
 
   @ApiOperation({ summary: '支付宝同步返回' })
+  @Public() // 设置为公共接口，不需要JWT认证
   @Get('alipay/return')
   async alipayReturn(@Req() req: any, @Res() res: Response) {
     console.log('收到支付宝同步返回:', JSON.stringify(req.query))

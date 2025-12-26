@@ -27,7 +27,11 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
-    return response.data
+    console.log('response', response)
+    if(response.config.url?.includes('/alipay')) {
+      return response.data
+    }
+    return response.data.data
   },
   (error: any) => {
     if (error.response) {

@@ -188,4 +188,28 @@ export class DashboardController {
       data: result
     };
   }
+
+  /**
+   * 获取订单状态分布数据（成功支付和取消订单占比）
+   * @param period 统计周期（day, week, month）
+   * @returns 订单状态分布数据
+   */
+  @Get('order-status-distribution')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '获取订单状态分布', description: '获取订单成功支付和取消订单的分布统计数据' })
+  @ApiQuery({ name: 'period', required: false, description: '统计周期：day(日), week(周), month(月)', enum: ['day', 'week', 'month'] })
+  @ApiResponse({ status: 200, description: '获取成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  async getOrderStatusDistribution(
+    @Query('period') period: 'day' | 'week' | 'month' = 'day'
+  ) {
+    const result = await this.dashboardService.getOrderStatusDistribution(period);
+    
+    return {
+      code: 200,
+      message: 'success',
+      data: result
+    };
+  }
 }

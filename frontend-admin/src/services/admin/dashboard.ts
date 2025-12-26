@@ -109,3 +109,27 @@ export async function exportSalesTrend(params?: SalesTrendParams): Promise<Blob>
     responseType: 'blob', // 指定响应类型为二进制数据
   });
 }
+
+// 订单状态分布接口参数
+interface OrderStatusDistributionParams {
+  period?: 'day' | 'week' | 'month';
+}
+
+// 订单状态分布响应项
+interface OrderStatusDistributionItem {
+  status: string;
+  name: string;
+  count: number;
+  percentage: number;
+}
+
+// 订单状态分布响应
+type OrderStatusDistributionResponse = OrderStatusDistributionItem[];
+
+// 订单状态分布API
+export async function getOrderStatusDistribution(params?: OrderStatusDistributionParams): Promise<OrderStatusDistributionResponse> {
+  return request('/admin/dashboard/order-status-distribution', {
+    method: 'GET',
+    params,
+  });
+}

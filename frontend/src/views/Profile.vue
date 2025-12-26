@@ -85,7 +85,7 @@ const loadUserInfo = async () => {
 
   try {
     const res = (await getUserById(localUser.id)) as unknown as User
-    user.value = res.data;
+    user.value = res;
   } catch (error) {
     console.error('加载用户信息失败:', error)
   }

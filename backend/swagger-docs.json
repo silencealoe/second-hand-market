@@ -1918,6 +1918,45 @@
           }
         ]
       }
+    },
+    "/admin/dashboard/order-status-distribution": {
+      "get": {
+        "operationId": "DashboardController_getOrderStatusDistribution",
+        "summary": "获取订单状态分布",
+        "description": "获取订单成功支付和取消订单的分布统计数据",
+        "parameters": [
+          {
+            "name": "period",
+            "required": false,
+            "in": "query",
+            "description": "统计周期：day(日), week(周), month(月)",
+            "schema": {
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-数据大屏"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "info": {
