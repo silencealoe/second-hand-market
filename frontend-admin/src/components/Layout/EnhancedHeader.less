@@ -1,0 +1,189 @@
+/**
+ * 增强头部组件样式
+ */
+
+.enhanced-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: var(--header-bg) !important;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    height: var(--header-height);
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        flex: 1;
+
+        .header-collapse-button {
+            color: #fff !important;
+            font-size: 16px;
+            margin-right: 16px;
+            border: none !important;
+            background: transparent !important;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+        }
+
+        .header-breadcrumb {
+            .ant-breadcrumb-link {
+                color: rgba(255, 255, 255, 0.65);
+                transition: color 0.3s ease;
+
+                &:hover {
+                    color: #fff;
+                }
+            }
+
+            .ant-breadcrumb-separator {
+                color: rgba(255, 255, 255, 0.45);
+            }
+
+            .breadcrumb-icon {
+                margin-right: 4px;
+            }
+        }
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+
+        .header-user-area {
+            .header-action-button {
+                color: rgba(255, 255, 255, 0.85) !important;
+                border: none !important;
+                background: transparent !important;
+                font-size: 16px;
+
+                &:hover {
+                    color: #fff !important;
+                    background: rgba(255, 255, 255, 0.1) !important;
+                }
+            }
+
+            .header-user-info {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+                padding: 8px 12px;
+                border-radius: 6px;
+                transition: all 0.3s ease;
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                .user-name {
+                    color: #fff;
+                    margin-left: 8px;
+                    font-weight: 500;
+                    font-size: 14px;
+                }
+            }
+        }
+    }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+    .enhanced-header {
+        padding: 0 16px;
+
+        .header-left {
+            .header-breadcrumb {
+                display: none; // 移动端隐藏面包屑
+            }
+        }
+
+        .header-right {
+            .header-user-area {
+                .user-name {
+                    display: none; // 移动端隐藏用户名
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .enhanced-header {
+        padding: 0 12px;
+
+        .header-right {
+            .header-user-area {
+                .ant-space-item:not(:last-child) {
+                    display: none; // 超小屏幕只显示用户头像
+                }
+            }
+        }
+    }
+}
+
+// 深色主题适配
+[data-theme='dark'] {
+    .enhanced-header {
+        background: var(--header-bg) !important;
+        border-bottom-color: var(--border-color);
+
+        .header-left {
+            .header-collapse-button {
+                &:hover {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                }
+            }
+
+            .header-breadcrumb {
+                .ant-breadcrumb-link {
+                    color: rgba(255, 255, 255, 0.65);
+
+                    &:hover {
+                        color: rgba(255, 255, 255, 0.85);
+                    }
+                }
+
+                .ant-breadcrumb-separator {
+                    color: rgba(255, 255, 255, 0.45);
+                }
+            }
+        }
+
+        .header-right {
+            .header-user-area {
+                .header-action-button {
+                    &:hover {
+                        background: rgba(255, 255, 255, 0.05) !important;
+                    }
+                }
+
+                .header-user-info {
+                    &:hover {
+                        background: rgba(255, 255, 255, 0.05);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 高对比度模式
+@media (prefers-contrast: high) {
+    .enhanced-header {
+        border-bottom-width: 2px;
+
+        .header-left {
+            .header-breadcrumb {
+                .ant-breadcrumb-link {
+                    color: #fff;
+                }
+            }
+        }
+    }
+}

@@ -12,8 +12,11 @@ interface LoginResponse {
   user: {
     id: number;
     username: string;
-    name: string;
+    realName: string;
+    avatar: string;
     role: string;
+    isSuper: number;
+    lastLoginAt: Date;
   };
 }
 

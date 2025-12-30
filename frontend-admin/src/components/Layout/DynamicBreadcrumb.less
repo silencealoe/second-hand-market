@@ -1,0 +1,212 @@
+/**
+ * 动态面包屑导航样式
+ */
+
+.dynamic-breadcrumb {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0;
+
+    .breadcrumb-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        min-width: 0; // 允许内容收缩
+
+        .breadcrumb-home-button {
+            margin-right: 8px;
+            color: rgba(255, 255, 255, 0.65);
+            border: none;
+            background: transparent;
+
+            &:hover {
+                color: #fff;
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        .breadcrumb-nav {
+            flex: 1;
+            min-width: 0;
+
+            .ant-breadcrumb-link {
+                color: rgba(255, 255, 255, 0.65);
+                transition: color 0.3s ease;
+
+                &:hover {
+                    color: #fff;
+                }
+            }
+
+            .ant-breadcrumb-separator {
+                color: rgba(255, 255, 255, 0.45);
+                margin: 0 8px;
+            }
+
+            .breadcrumb-item {
+                display: inline-flex;
+                align-items: center;
+                max-width: 200px;
+
+                .breadcrumb-icon {
+                    margin-right: 4px;
+                    font-size: 14px;
+                }
+
+                .breadcrumb-link {
+                    color: rgba(255, 255, 255, 0.65);
+                    text-decoration: none;
+                    transition: color 0.3s ease;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+
+                    &:hover {
+                        color: #fff;
+                    }
+                }
+
+                .breadcrumb-current {
+                    color: #fff;
+                    font-weight: 500;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .breadcrumb-ellipsis {
+                    color: rgba(255, 255, 255, 0.45);
+                    font-weight: bold;
+                    cursor: default;
+                }
+            }
+        }
+    }
+
+    .breadcrumb-actions {
+        display: flex;
+        align-items: center;
+        margin-left: 16px;
+
+        .breadcrumb-refresh-button {
+            color: rgba(255, 255, 255, 0.65);
+            border: none;
+            background: transparent;
+
+            &:hover {
+                color: #fff;
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+    }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+    .dynamic-breadcrumb {
+        .breadcrumb-content {
+            .breadcrumb-nav {
+                .breadcrumb-item {
+                    max-width: 120px;
+                }
+            }
+        }
+
+        .breadcrumb-actions {
+            margin-left: 8px;
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .dynamic-breadcrumb {
+        .breadcrumb-content {
+            .breadcrumb-home-button {
+                display: none; // 超小屏幕隐藏首页按钮
+            }
+
+            .breadcrumb-nav {
+                .breadcrumb-item {
+                    max-width: 80px;
+
+                    .breadcrumb-icon {
+                        display: none; // 超小屏幕隐藏图标
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 深色主题适配
+[data-theme='dark'] {
+    .dynamic-breadcrumb {
+        .breadcrumb-content {
+            .breadcrumb-home-button {
+                color: rgba(255, 255, 255, 0.65);
+
+                &:hover {
+                    color: rgba(255, 255, 255, 0.85);
+                    background: rgba(255, 255, 255, 0.05);
+                }
+            }
+
+            .breadcrumb-nav {
+                .ant-breadcrumb-link {
+                    color: rgba(255, 255, 255, 0.65);
+
+                    &:hover {
+                        color: rgba(255, 255, 255, 0.85);
+                    }
+                }
+
+                .breadcrumb-item {
+                    .breadcrumb-link {
+                        color: rgba(255, 255, 255, 0.65);
+
+                        &:hover {
+                            color: rgba(255, 255, 255, 0.85);
+                        }
+                    }
+
+                    .breadcrumb-current {
+                        color: rgba(255, 255, 255, 0.85);
+                    }
+                }
+            }
+        }
+
+        .breadcrumb-actions {
+            .breadcrumb-refresh-button {
+                color: rgba(255, 255, 255, 0.65);
+
+                &:hover {
+                    color: rgba(255, 255, 255, 0.85);
+                    background: rgba(255, 255, 255, 0.05);
+                }
+            }
+        }
+    }
+}
+
+// 高对比度模式
+@media (prefers-contrast: high) {
+    .dynamic-breadcrumb {
+        .breadcrumb-content {
+            .breadcrumb-nav {
+                .breadcrumb-item {
+                    .breadcrumb-link {
+                        color: #fff;
+                    }
+
+                    .breadcrumb-current {
+                        color: #fff;
+                        font-weight: 600;
+                    }
+                }
+            }
+        }
+    }
+}

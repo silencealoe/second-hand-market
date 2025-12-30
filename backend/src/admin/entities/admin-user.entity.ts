@@ -44,6 +44,13 @@ export class AdminUser {
   phone: string;
 
   /**
+   * 头像URL
+   */
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  @ApiProperty({ description: '头像URL', example: 'https://example.com/avatar.jpg', required: false })
+  avatar: string;
+
+  /**
    * 关联的角色ID
    */
   @Column({ name: 'role_id', nullable: true })

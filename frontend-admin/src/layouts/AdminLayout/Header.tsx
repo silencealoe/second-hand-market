@@ -15,7 +15,9 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
   const handleLogout = async () => {
     try {
       await logout();
+      // 清除localStorage中的登录信息
       localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
       navigate('/login');
       message.success('退出登录成功');
     } catch (error) {
@@ -65,7 +67,11 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
         placement="bottomRight"
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar icon={<UserOutlined />} style={{ marginRight: 8 }} />
+          <Avatar 
+            src={currentUser.avatar} 
+            icon={<UserOutlined />} 
+            style={{ marginRight: 8 }} 
+          />
           <span style={{ color: '#fff' }}>{currentUser.realName || currentUser.username}</span>
         </div>
       </Dropdown>

@@ -1,0 +1,312 @@
+/**
+ * 增强导航菜单样式
+ */
+
+.enhanced-menu {
+    border-right: none !important;
+    background: transparent !important;
+
+    .enhanced-menu-item {
+        position: relative;
+        transition: all 0.3s ease;
+
+        &.menu-item-hidden {
+            display: none !important;
+        }
+
+        &.menu-item-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+
+            .menu-item-text {
+                color: rgba(255, 255, 255, 0.25) !important;
+            }
+        }
+
+        .menu-item-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+
+            .menu-item-text {
+                flex: 1;
+                font-weight: 500;
+                transition: color 0.3s ease;
+            }
+
+            .menu-item-badge {
+                margin-left: 8px;
+
+                .ant-badge-count {
+                    background: var(--primary-color);
+                    border-color: var(--primary-color);
+                    font-size: 10px;
+                    min-width: 16px;
+                    height: 16px;
+                    line-height: 16px;
+                    padding: 0 4px;
+                }
+            }
+        }
+
+        // 活动状态指示器
+        &.menu-item-active {
+            &::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background: var(--primary-color);
+                border-radius: 0 2px 2px 0;
+                z-index: 1;
+            }
+        }
+    }
+
+    // Ant Design Menu 项样式覆盖
+    .ant-menu-item {
+        margin: 4px 8px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+
+            &::after {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 2px;
+                background: linear-gradient(90deg, var(--primary-color), transparent);
+                animation: slideIn 0.3s ease;
+            }
+        }
+
+        &.ant-menu-item-selected {
+            background: var(--primary-color) !important;
+            color: #fff !important;
+
+            &::after {
+                display: none;
+            }
+
+            .ant-menu-title-content {
+                color: #fff !important;
+            }
+
+            .ant-menu-item-icon {
+                color: #fff !important;
+            }
+        }
+
+        .ant-menu-title-content {
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .ant-menu-item-icon {
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+    }
+
+    // 子菜单样式
+    .ant-menu-submenu {
+        margin: 4px 8px;
+        border-radius: 6px;
+
+        .ant-menu-submenu-title {
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+
+                &::after {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    height: 2px;
+                    background: linear-gradient(90deg, var(--primary-color), transparent);
+                    animation: slideIn 0.3s ease;
+                }
+            }
+
+            .ant-menu-title-content {
+                font-weight: 500;
+            }
+
+            .ant-menu-submenu-arrow {
+                transition: transform 0.3s ease;
+            }
+        }
+
+        &.ant-menu-submenu-open {
+            .ant-menu-submenu-title {
+                .ant-menu-submenu-arrow {
+                    transform: rotate(180deg);
+                }
+            }
+        }
+
+        .ant-menu-sub {
+            background: rgba(0, 0, 0, 0.1) !important;
+            border-radius: 0 0 6px 6px;
+
+            .ant-menu-item {
+                margin: 2px 16px 2px 24px;
+                padding-left: 24px !important;
+                border-radius: 4px;
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    left: 12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 4px;
+                    height: 4px;
+                    background: rgba(255, 255, 255, 0.45);
+                    border-radius: 50%;
+                    transition: all 0.3s ease;
+                }
+
+                &:hover::before {
+                    background: rgba(255, 255, 255, 0.85);
+                    transform: translateY(-50%) scale(1.5);
+                }
+
+                &.ant-menu-item-selected::before {
+                    background: #fff;
+                    transform: translateY(-50%) scale(1.5);
+                }
+            }
+        }
+    }
+
+    // 折叠状态样式
+    &.ant-menu-inline-collapsed {
+        .ant-menu-item {
+            padding: 0 calc(50% - 8px) !important;
+            text-align: center;
+
+            .ant-menu-item-icon {
+                margin: 0;
+                font-size: 18px;
+            }
+
+            .menu-item-badge {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+            }
+        }
+
+        .ant-menu-submenu {
+            padding: 0 calc(50% - 8px) !important;
+            text-align: center;
+
+            .ant-menu-submenu-title {
+                .ant-menu-item-icon {
+                    margin: 0;
+                    font-size: 18px;
+                }
+
+                .ant-menu-submenu-arrow {
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
+// 滑入动画
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+// 深色主题适配
+[data-theme='dark'] {
+    .enhanced-menu {
+        .ant-menu-item {
+            &:hover {
+                background: rgba(255, 255, 255, 0.05) !important;
+            }
+        }
+
+        .ant-menu-submenu {
+            .ant-menu-submenu-title {
+                &:hover {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                }
+            }
+
+            .ant-menu-sub {
+                background: rgba(0, 0, 0, 0.2) !important;
+            }
+        }
+    }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+    .enhanced-menu {
+        .ant-menu-item {
+            margin: 2px 12px;
+            padding: 8px 16px !important;
+
+            .ant-menu-item-icon {
+                font-size: 14px;
+            }
+        }
+
+        .ant-menu-submenu {
+            margin: 2px 12px;
+
+            .ant-menu-sub {
+                .ant-menu-item {
+                    margin: 1px 8px 1px 16px;
+                    padding-left: 20px !important;
+                }
+            }
+        }
+    }
+}
+
+// 高对比度模式
+@media (prefers-contrast: high) {
+    .enhanced-menu {
+        .ant-menu-item {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+
+            &.ant-menu-item-selected {
+                border-color: var(--primary-color);
+            }
+        }
+
+        .ant-menu-submenu {
+            .ant-menu-submenu-title {
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+        }
+    }
+}

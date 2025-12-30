@@ -8,6 +8,7 @@ interface HeaderRightProps {
 }
 
 const HeaderRight: React.FC<HeaderRightProps> = ({ currentUser }) => {
+  console.log('currentUse--r', currentUser);
   if (!currentUser) {
     return null;
   }
@@ -16,7 +17,9 @@ const HeaderRight: React.FC<HeaderRightProps> = ({ currentUser }) => {
   const handleLogout = async () => {
     try {
       await logout();
+      // 清除localStorage中的登录信息
       localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
       window.location.href = '/login';
       message.success('退出登录成功');
     } catch (error) {
@@ -52,7 +55,11 @@ const HeaderRight: React.FC<HeaderRightProps> = ({ currentUser }) => {
       placement="bottomRight"
     >
       <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px', cursor: 'pointer' }}>
-        <Avatar icon={<UserOutlined />} style={{ marginRight: 8 }} />
+        <Avatar 
+          src={currentUser.avatar} 
+          icon={<UserOutlined />} 
+          style={{ marginRight: 8 }} 
+        />
         <span style={{ color: '#fff' }}>{currentUser.realName || currentUser.username}</span>
       </div>
     </Dropdown>

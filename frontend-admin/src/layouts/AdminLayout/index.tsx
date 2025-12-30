@@ -13,9 +13,9 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
-  // 从initialState中获取当前用户信息
-  const { initialState } = useModel('@@initialState');
-  const currentUser = initialState?.currentUser;
+  // 从全局状态中获取当前用户信息
+  const { userInfo } = useModel('global');
+  const currentUser = userInfo;
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <AntSider breakpoint="lg" collapsedWidth="0" style={{ backgroundColor: '#001529' }}>

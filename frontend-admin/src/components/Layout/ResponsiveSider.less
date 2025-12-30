@@ -1,0 +1,203 @@
+/**
+ * 响应式侧边栏样式
+ */
+
+.responsive-sider {
+    background: var(--sider-bg) !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+
+    .sider-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 64px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 16px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+
+        img {
+            width: 32px;
+            height: 32px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 0 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+    }
+
+    .sider-menu {
+        border-right: none !important;
+        background: transparent !important;
+
+        .ant-menu-item {
+            margin: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+
+            &.ant-menu-item-selected {
+                background: var(--primary-color) !important;
+
+                &::after {
+                    display: none;
+                }
+            }
+
+            .ant-menu-title-content {
+                font-weight: 500;
+            }
+        }
+
+        .ant-menu-item-icon {
+            font-size: 16px;
+        }
+    }
+
+    .sider-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+        .collapse-button {
+            width: 100% !important;
+            height: 48px !important;
+            border: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+        }
+    }
+}
+
+// 移动端样式
+.mobile-menu-trigger {
+    &:hover {
+        background: rgba(0, 0, 0, 0.65) !important;
+    }
+}
+
+.mobile-sider-drawer {
+    .ant-drawer-header {
+        background: var(--sider-bg);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+        .ant-drawer-title {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .ant-drawer-close {
+            color: #fff;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+    }
+
+    .ant-drawer-body {
+        background: var(--sider-bg);
+        padding: 0;
+
+        .ant-menu {
+            background: transparent !important;
+            border-right: none !important;
+
+            .ant-menu-item {
+                margin: 4px 16px;
+                border-radius: 6px;
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.1) !important;
+                }
+
+                &.ant-menu-item-selected {
+                    background: var(--primary-color) !important;
+                }
+            }
+        }
+    }
+}
+
+// 响应式适配
+@media (max-width: 768px) {
+    .responsive-sider {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-menu-trigger {
+        display: none !important;
+    }
+}
+
+// 深色主题适配
+[data-theme='dark'] {
+    .responsive-sider {
+        .sider-logo {
+            background: rgba(255, 255, 255, 0.05);
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        .sider-menu {
+            .ant-menu-item {
+                &:hover {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                }
+            }
+        }
+
+        .sider-footer {
+            border-top-color: rgba(255, 255, 255, 0.05);
+
+            .collapse-button {
+                &:hover {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                }
+            }
+        }
+    }
+
+    .mobile-sider-drawer {
+        .ant-drawer-header {
+            background: var(--sider-bg);
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .ant-drawer-body {
+            background: var(--sider-bg);
+
+            .ant-menu-item {
+                &:hover {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                }
+            }
+        }
+    }
+}

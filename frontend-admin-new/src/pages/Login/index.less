@@ -1,0 +1,79 @@
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    padding: 20px;
+
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px var(--shadow-color);
+        overflow: hidden;
+
+        :global(.ant-card-head) {
+            background: var(--accent-color);
+            border-bottom: none;
+            text-align: center;
+            padding: 24px;
+
+            :global(.ant-card-head-title) {
+                color: #ffffff;
+                font-size: 20px;
+                font-weight: 600;
+                margin: 0;
+            }
+        }
+
+        :global(.ant-card-body) {
+            padding: 32px;
+        }
+
+        .login-button {
+            height: 48px;
+            font-size: 16px;
+            font-weight: 500;
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            border-radius: 8px;
+
+            &:hover {
+                background: var(--accent-hover);
+                border-color: var(--accent-hover);
+            }
+        }
+
+        :global(.ant-input-affix-wrapper) {
+            height: 48px;
+            border-radius: 8px;
+            border-color: var(--border-color);
+            background: var(--bg-tertiary);
+
+            &:hover {
+                border-color: var(--accent-color);
+            }
+
+            &:focus-within {
+                border-color: var(--accent-color);
+                box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
+            }
+
+            :global(.ant-input) {
+                background: transparent;
+                color: var(--text-primary);
+
+                &::placeholder {
+                    color: var(--text-tertiary);
+                }
+            }
+
+            :global(.anticon) {
+                color: var(--text-secondary);
+            }
+        }
+    }
+}

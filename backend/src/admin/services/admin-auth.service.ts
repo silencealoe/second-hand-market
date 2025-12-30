@@ -94,6 +94,7 @@ export class AdminAuthService {
         id: updatedUser.id,
         username: updatedUser.username,
         realName: updatedUser.realName,
+        avatar: updatedUser.avatar,
         role: updatedUser.role?.name || '',
         isSuper: updatedUser.role?.isSuper || 0,
         lastLoginAt: updatedUser.lastLoginAt,
@@ -166,7 +167,7 @@ export class AdminAuthService {
     const user = await this.adminUserRepository.findOne({
       where: { id: userId },
       relations: ['role'],
-      select: ['id', 'username', 'realName', 'phone', 'status', 'lastLoginAt', 'createdAt']
+      select: ['id', 'username', 'realName', 'phone', 'avatar', 'status', 'lastLoginAt', 'createdAt']
     });
 
     if (!user) {
@@ -178,6 +179,7 @@ export class AdminAuthService {
       username: user.username,
       realName: user.realName,
       phone: user.phone,
+      avatar: user.avatar,
       status: user.status,
       role: user.role?.name || '',
       isSuper: user.role?.isSuper || 0,

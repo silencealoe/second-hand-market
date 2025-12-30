@@ -1,0 +1,95 @@
+.dashboard-container {
+    .filter-area {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--shadow-color);
+    }
+
+    .metrics-cards {
+        margin-bottom: 24px;
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+            transition: all 0.3s ease;
+
+            &:hover {
+                box-shadow: 0 4px 16px var(--shadow-color);
+                transform: translateY(-2px);
+            }
+
+            :global(.ant-statistic-title) {
+                color: var(--text-secondary);
+                font-weight: 500;
+            }
+
+            :global(.ant-statistic-content) {
+                color: var(--text-primary);
+            }
+        }
+    }
+
+    .charts-section {
+        margin-bottom: 24px;
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+
+            :global(.ant-card-head) {
+                border-bottom: 1px solid var(--border-color);
+
+                :global(.ant-card-head-title) {
+                    color: var(--text-primary);
+                    font-weight: 600;
+                }
+            }
+
+            :global(.ant-card-body) {
+                padding: 24px;
+            }
+        }
+    }
+
+    .table-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--shadow-color);
+
+        :global(.ant-card-head) {
+            border-bottom: 1px solid var(--border-color);
+
+            :global(.ant-card-head-title) {
+                color: var(--text-primary);
+                font-weight: 600;
+            }
+        }
+
+        :global(.ant-table) {
+            background: transparent;
+
+            :global(.ant-table-thead > tr > th) {
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            :global(.ant-table-tbody > tr > td) {
+                border-bottom: 1px solid var(--border-color);
+                color: var(--text-primary);
+            }
+
+            :global(.ant-table-tbody > tr:hover > td) {
+                background: var(--bg-tertiary);
+            }
+        }
+    }
+}

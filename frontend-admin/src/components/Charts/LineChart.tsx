@@ -33,7 +33,6 @@ const LineChart: React.FC<LineChartProps> = ({
 
     // 初始化图表实例
     chartInstance.current = echarts.init(chartRef.current);
-
     // 配置图表
     const option: echarts.EChartsOption = {
       title: {

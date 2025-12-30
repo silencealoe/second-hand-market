@@ -15,8 +15,9 @@ const Login: React.FC = () => {
       const response = await login(values);
       console.log('登录响应:', response);
       if (response && response.token) {
-        // 保存token到localStorage
+        // 直接保存token和用户信息到localStorage
         localStorage.setItem('token', response.token);
+        localStorage.setItem('userInfo', JSON.stringify(response.user));
         message.success('登录成功');
         navigate('/home');
       } else {
