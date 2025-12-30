@@ -1,3 +1,10 @@
+// 通用 API 响应类型
+export interface ApiResponse<T = any> {
+    code?: number;
+    message?: string;
+    data: T;
+}
+
 // 用户认证相关类型
 export interface User {
     id: string;
@@ -18,10 +25,10 @@ export interface LoginForm {
     password: string;
 }
 
-export interface LoginResponse {
+export interface LoginResponse extends ApiResponse<{
     token: string;
     user: User;
-}
+}> { }
 
 // 主题相关类型
 export type ThemeMode = 'dark' | 'light';

@@ -1,0 +1,88 @@
+.logo-container {
+    display: flex;
+    align-items: center;
+
+    .logo-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        border-radius: 12px;
+        color: white;
+        margin-right: 12px;
+        box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    }
+
+    .logo-text {
+        .logo-title {
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .logo-subtitle {
+            font-weight: 500;
+            opacity: 0.8;
+            line-height: 1;
+        }
+    }
+
+    // 小尺寸
+    &.logo-small {
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        .logo-text {
+            .logo-title {
+                font-size: 14px;
+            }
+
+            .logo-subtitle {
+                font-size: 12px;
+            }
+        }
+    }
+
+    // 中等尺寸
+    &.logo-medium {
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            .logo-title {
+                font-size: 16px;
+            }
+
+            .logo-subtitle {
+                font-size: 14px;
+            }
+        }
+    }
+
+    // 大尺寸
+    &.logo-large {
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            font-size: 28px;
+            border-radius: 16px;
+        }
+
+        .logo-text {
+            .logo-title {
+                font-size: 24px;
+            }
+
+            .logo-subtitle {
+                font-size: 16px;
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, AuthState } from '@/types';
+import { logout as logoutApi } from '@/services/auth';
 
 interface AuthContextType extends AuthState {
     login: (token: string, user: User) => void;
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         token: null,
         isAuthenticated: false,
     });
+
 
     // 初始化认证状态
     useEffect(() => {
@@ -58,14 +60,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        setAuthState({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-        });
+    const logout = async () => {
+        try {
+            // 调用退出登录接口
+            await logoutApi();
+        } catch (error) {
+            console.error('退出登录接口调用失败:', error);
+            // 即使接口调用失败，也要清除本地存储
+        } finally {
+            // 清除本地存储和状态
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            setAuthState({
+                user: null,
+                token: null,
+                isAuthenticated: false,
+            });
+        }
     };
 
     return (

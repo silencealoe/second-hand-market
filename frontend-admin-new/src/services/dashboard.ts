@@ -26,6 +26,6 @@ export const getTopProducts = async (params: { limit: number; period: string }) 
 };
 
 // 导出销售趋势数据 - 使用专门的导出实例
-export const exportSalesTrend = async (params: { period: string }) => {
+export const exportSalesTrend = async (params: { period: string }): Promise<Blob> => {
     return exportRequest.get('/admin/dashboard/export-sales-trend', { params });
 };

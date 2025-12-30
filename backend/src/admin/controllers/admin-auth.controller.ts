@@ -13,7 +13,7 @@ import { Public } from '../../common/decorators/public.decorator';
 @ApiTags('后台管理-认证')
 @Controller('admin/auth')
 export class AdminAuthController {
-  constructor(private readonly adminAuthService: AdminAuthService) {}
+  constructor(private readonly adminAuthService: AdminAuthService) { }
 
   /**
    * 管理员登录接口
@@ -33,14 +33,14 @@ export class AdminAuthController {
   ) {
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
-    
+
     const result = await this.adminAuthService.login(
       loginDto.username,
       loginDto.password,
       ipAddress,
       userAgent
     );
-    
+
     return {
       code: 200,
       message: 'success',
@@ -63,7 +63,7 @@ export class AdminAuthController {
   async getProfile(@Req() req: any) {
     const userId = req.user.sub;
     const result = await this.adminAuthService.getProfile(userId);
-    
+
     return {
       code: 200,
       message: 'success',
@@ -91,7 +91,7 @@ export class AdminAuthController {
     const userId = req.user.sub;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
-    
+
     const result = await this.adminAuthService.changePassword(
       userId,
       changePasswordDto.oldPassword,
@@ -99,7 +99,7 @@ export class AdminAuthController {
       ipAddress,
       userAgent
     );
-    
+
     return {
       code: 200,
       message: 'success',
@@ -125,6 +125,33 @@ export class AdminAuthController {
       data: {
         valid: true,
         user: req.user,
+      }
+    };
+  }
+
+  /**
+   * 管理员退出登录
+   * @param req 请求对象
+   * @returns 退出登录结果
+   */
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '管理员退出登录', description: '管理员用户退出登录系统' })
+  @ApiResponse({ status: 200, description: '退出登录成功' })
+  @ApiResponse({ status: 401, description: '未授权' })
+  async logout(@Req() req: any) {
+    const userId = req.user.sub;
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+
+    await this.adminAuthService.logout(userId, ipAddress, userAgent);
+
+    return {
+      code: 200,
+      message: 'success',
+      data: {
+        message: '退出登录成功'
       }
     };
   }

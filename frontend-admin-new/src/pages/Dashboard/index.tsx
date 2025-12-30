@@ -64,6 +64,7 @@ const Dashboard: React.FC = () => {
     const [categoryDistribution, setCategoryDistribution] = useState<CategoryDistributionData | null>(null);
     const [orderStatusDistribution, setOrderStatusDistribution] = useState<OrderStatusDistributionData | null>(null);
     const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // 筛选条件
     const [dimension, setDimension] = useState<'week' | 'day' | 'month'>('day');
@@ -145,10 +146,19 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // 初始加载数据
+    // 初始加载数据 - 只在组件挂载时执行一次
     useEffect(() => {
         refreshData();
     }, []);
+
+    // 筛选条件变化时重新加载数据 - 排除初始渲染
+    useEffect(() => {
+        // 只有在组件已经挂载后，dimension 变化时才重新加载数据
+        // 避免与初始加载重复
+        if (coreMetrics !== null || salesTrend !== null) {
+            refreshData();
+        }
+    }, [dimension]);
 
     // 导出销售趋势数据到Excel
     const handleExportSalesTrend = async () => {
@@ -175,11 +185,6 @@ const Dashboard: React.FC = () => {
             console.error('导出销售趋势数据失败：', error);
         }
     };
-
-    // 筛选条件变化时重新加载数据
-    useEffect(() => {
-        refreshData();
-    }, [dimension]);
 
     // TOP商品表格列配置
     const topProductColumns = [
@@ -388,10 +393,10 @@ const Dashboard: React.FC = () => {
                     </Card>
                 </Col>
                 <Col span={12}>
-                    <Card title="支付方式占比" loading={loading} className="chart-card">
+                    <Card title="支付与取消订单占比" loading={loading} className="chart-card">
                         {orderStatusDistribution && (
                             <PieChart
-                                title="支付与取消订单占比"
+                                title=""
                                 data={orderStatusDistribution.map(item => ({
                                     name: item.name,
                                     value: item.count,

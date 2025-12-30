@@ -1333,6 +1333,30 @@
         ]
       }
     },
+    "/admin/auth/logout": {
+      "post": {
+        "operationId": "AdminAuthController_logout",
+        "summary": "管理员退出登录",
+        "description": "管理员用户退出登录系统",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "退出登录成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-认证"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/admin/users": {
       "post": {
         "operationId": "AdminUserController_create",

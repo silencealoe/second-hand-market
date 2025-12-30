@@ -20,9 +20,15 @@ const TopNavigation: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error('退出登录失败:', error);
+            // 即使退出登录失败，也要跳转到登录页
+            navigate('/login');
+        }
     };
 
     const userMenuItems: MenuProps['items'] = [

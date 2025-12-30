@@ -78,6 +78,11 @@ export const createResponseSuccessInterceptor = () => {
             });
         }
 
+        // 如果响应类型是 blob，直接返回 response.data (Blob 对象)
+        if (response.config.responseType === 'blob') {
+            return response.data;
+        }
+
         return response.data;
     };
 };

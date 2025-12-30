@@ -18,7 +18,7 @@ export class AdminAuthService {
     @InjectRepository(AdminOperationLog)
     private readonly operationLogRepository: Repository<AdminOperationLog>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   /**
    * 管理员用户登录
@@ -29,9 +29,9 @@ export class AdminAuthService {
    * @returns 登录结果，包含JWT令牌和用户信息
    */
   async login(
-    username: string, 
-    password: string, 
-    ipAddress: string, 
+    username: string,
+    password: string,
+    ipAddress: string,
     userAgent: string
   ) {
     // 查找用户
@@ -39,7 +39,7 @@ export class AdminAuthService {
       where: { username },
       relations: ['role'],
     });
-    
+
     console.log('初始查询用户信息:', user);
     console.log('初始查询用户角色信息:', user?.role);
 
@@ -69,11 +69,11 @@ export class AdminAuthService {
     });
 
     // 生成JWT令牌
-    const payload = { 
-      sub: updatedUser.id, 
-      username: updatedUser.username, 
+    const payload = {
+      sub: updatedUser.id,
+      username: updatedUser.username,
       role: updatedUser.role?.name || '',
-      isSuper: updatedUser.role?.isSuper || 0 
+      isSuper: updatedUser.role?.isSuper || 0
     };
     const token = this.jwtService.sign(payload);
 
@@ -186,6 +186,34 @@ export class AdminAuthService {
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
     };
+  }
+
+  /**
+   * 管理员退出登录
+   * @param userId 用户ID
+   * @param ipAddress IP地址
+   * @param userAgent 用户代理
+   */
+  async logout(userId: number, ipAddress: string, userAgent: string) {
+    const user = await this.adminUserRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new UnauthorizedException('用户不存在');
+    }
+
+    // 记录退出登录日志
+    await this.recordOperationLog(
+      userId,
+      '认证',
+      '退出登录',
+      null,
+      `管理员 ${user.username} 退出登录`,
+      ipAddress,
+      userAgent
+    );
+
+    // 注意：在JWT无状态认证中，服务端通常不需要做额外处理
+    // 客户端删除token即可实现退出登录
+    // 如果需要实现token黑名单功能，可以在这里添加相关逻辑
   }
 
   /**

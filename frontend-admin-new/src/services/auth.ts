@@ -10,3 +10,8 @@ export const login = async (loginForm: LoginForm): Promise<LoginResponse> => {
 export const getUserInfo = async () => {
     return apiRequest.get('/admin/auth/me');
 };
+
+// 退出登录API
+export const logout = async () => {
+    return apiRequest.post('/admin/auth/logout');
+};
