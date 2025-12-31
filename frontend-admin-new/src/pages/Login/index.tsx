@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, Card, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined, DashboardOutlined, ShopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +13,14 @@ const { Title, Paragraph } = Typography;
 const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { login: authLogin } = useAuth();
+    const { login: authLogin, isAuthenticated } = useAuth();
+
+    // 如果已经登录，重定向到 dashboard
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, navigate]);
 
     const onFinish = async (values: LoginForm) => {
         setLoading(true);
@@ -30,9 +37,21 @@ const Login: React.FC = () => {
             } else {
                 message.error('登录失败：未获取到登录令牌');
             }
-        } catch (error) {
-            message.error('登录失败，请检查账号密码');
+        } catch (error: any) {
             console.error('登录错误:', error);
+
+            // 获取后端返回的具体错误信息
+            let errorMessage = '登录失败，请检查账号密码';
+
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.response?.status === 401) {
+                errorMessage = '账号或密码错误，请重新输入';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            message.error(errorMessage);
         } finally {
             setLoading(false);
         }

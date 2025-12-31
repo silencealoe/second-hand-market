@@ -21,7 +21,7 @@ export class AdminUserService {
     private readonly adminRoleRepository: Repository<AdminRole>,
     @InjectRepository(AdminOperationLog)
     private readonly operationLogRepository: Repository<AdminOperationLog>,
-  ) {}
+  ) { }
 
   /**
    * 创建管理员用户
@@ -47,8 +47,8 @@ export class AdminUserService {
     }
 
     // 检查角色是否存在
-    const role = await this.adminRoleRepository.findOneBy({ 
-      id: createAdminUserDto.roleId 
+    const role = await this.adminRoleRepository.findOneBy({
+      id: createAdminUserDto.roleId
     });
     if (!role) {
       throw new NotFoundException('角色不存在');
@@ -129,8 +129,8 @@ export class AdminUserService {
 
     // 检查角色是否存在
     if (updateAdminUserDto.roleId) {
-      const role = await this.adminRoleRepository.findOneBy({ 
-        id: updateAdminUserDto.roleId 
+      const role = await this.adminRoleRepository.findOneBy({
+        id: updateAdminUserDto.roleId
       });
       if (!role) {
         throw new NotFoundException('角色不存在');
@@ -222,7 +222,10 @@ export class AdminUserService {
       userAgent
     );
 
-    return { message: '密码重置成功' };
+    return {
+      message: '密码重置成功',
+      newPassword: defaultPassword
+    };
   }
 
   /**
@@ -279,30 +282,36 @@ export class AdminUserService {
   }) {
     const { page = 1, limit = 10, search, roleId, status } = options;
     const skip = (page - 1) * limit;
-    const where: FindOptionsWhere<AdminUser> = {};
 
-    // 关键词搜索
+    const queryBuilder = this.adminUserRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role');
+
+    // 关键词搜索（用户名或真实姓名）
     if (search) {
-      where.username = Like(`%${search}%`);
+      queryBuilder.andWhere(
+        '(user.username LIKE :search OR user.realName LIKE :search)',
+        { search: `%${search}%` }
+      );
     }
 
     // 角色筛选
-    if (roleId) {
-      where.roleId = roleId;
+    if (roleId !== undefined && roleId !== null) {
+      queryBuilder.andWhere('user.roleId = :roleId', { roleId });
     }
 
     // 状态筛选
-    if (status !== undefined) {
-      where.status = status;
+    if (status !== undefined && status !== null) {
+      queryBuilder.andWhere('user.status = :status', { status });
     }
 
-    const [users, total] = await this.adminUserRepository.findAndCount({
-      where,
-      relations: ['role'],
-      order: { id: 'DESC' },
-      skip,
-      take: limit,
-    });
+    // 排序和分页
+    queryBuilder
+      .orderBy('user.id', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    const [users, total] = await queryBuilder.getManyAndCount();
 
     return {
       data: users,

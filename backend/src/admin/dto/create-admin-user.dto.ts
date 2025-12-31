@@ -48,4 +48,13 @@ export class CreateAdminUserDto {
   @IsInt({ message: '角色ID必须是整数' })
   @IsNotEmpty({ message: '角色ID不能为空' })
   roleId: number;
+
+  /**
+   * 状态 非必填 默认1
+   * @example 1
+   *
+   */
+  @ApiProperty({ description: '状态', example: 1, required: false })
+  @IsOptional()
+  status?: number;
 }

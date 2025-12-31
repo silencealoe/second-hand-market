@@ -6,6 +6,7 @@ import PrivateRoute from '@/components/PrivateRoute';
 import MainLayout from '@/components/Layout/MainLayout';
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
+import UserManagement from '@/pages/UserManagement';
 import '@/styles/variables.less';
 
 const App: React.FC = () => {
@@ -29,14 +30,26 @@ const App: React.FC = () => {
                             }
                         />
 
-                        {/* 占位路由 - 用户管理 */}
+                        {/* 系统管理 - 用户管理 */}
                         <Route
-                            path="/users"
+                            path="/system/users"
+                            element={
+                                <PrivateRoute>
+                                    <MainLayout>
+                                        <UserManagement />
+                                    </MainLayout>
+                                </PrivateRoute>
+                            }
+                        />
+
+                        {/* 系统管理 - 系统设置 */}
+                        <Route
+                            path="/system/settings"
                             element={
                                 <PrivateRoute>
                                     <MainLayout>
                                         <div style={{ padding: '24px', textAlign: 'center' }}>
-                                            <h2>用户管理</h2>
+                                            <h2>系统设置</h2>
                                             <p>功能开发中...</p>
                                         </div>
                                     </MainLayout>
@@ -44,19 +57,16 @@ const App: React.FC = () => {
                             }
                         />
 
-                        {/* 占位路由 - 系统管理 */}
+                        {/* 系统管理根路径重定向到用户管理 */}
                         <Route
                             path="/system"
-                            element={
-                                <PrivateRoute>
-                                    <MainLayout>
-                                        <div style={{ padding: '24px', textAlign: 'center' }}>
-                                            <h2>系统管理</h2>
-                                            <p>功能开发中...</p>
-                                        </div>
-                                    </MainLayout>
-                                </PrivateRoute>
-                            }
+                            element={<Navigate to="/system/users" replace />}
+                        />
+
+                        {/* 兼容旧的用户管理路径，重定向到新路径 */}
+                        <Route
+                            path="/users"
+                            element={<Navigate to="/system/users" replace />}
                         />
 
                         {/* 默认重定向 */}

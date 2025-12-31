@@ -1,4 +1,5 @@
 import { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { apiTracker } from '@/utils/api-call-tracker';
 
 // 请求配置接口
 export interface ApiConfig extends InternalAxiosRequestConfig {
@@ -10,6 +11,12 @@ export interface ApiConfig extends InternalAxiosRequestConfig {
 const handleApiError = (error: AxiosError) => {
     const status = error.response?.status;
     const message = (error.response?.data as any)?.message || error.message;
+    const url = error.config?.url;
+
+    // 登录接口的错误由页面自己处理，不进行统一处理
+    if (url?.includes('/admin/auth/login')) {
+        return;
+    }
 
     switch (status) {
         case 401:
@@ -35,6 +42,9 @@ const handleApiError = (error: AxiosError) => {
 // 请求拦截器 - 添加认证和日志
 export const createAuthRequestInterceptor = () => {
     return (config: ApiConfig) => {
+        // 追踪 API 调用
+        apiTracker.track(config.url || '', config.method || 'GET', config.params);
+
         // 添加认证 token
         if (!config.skipAuth) {
             const token = localStorage.getItem('token');

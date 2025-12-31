@@ -74,8 +74,36 @@
     "/users": {
       "get": {
         "operationId": "UsersController_findAll",
-        "summary": "获取所有用户列表",
-        "parameters": [],
+        "summary": "获取商城用户列表",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "页码，默认1",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "每页数量，默认10",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "搜索关键词（用户名、邮箱）",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "获取成功",
@@ -188,11 +216,87 @@
             "schema": {
               "type": "number"
             }
+          },
+          {
+            "name": "force",
+            "required": false,
+            "in": "query",
+            "description": "是否强制删除（删除关联数据）",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deleteProducts",
+            "required": false,
+            "in": "query",
+            "description": "是否删除用户的商品",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deleteComments",
+            "required": false,
+            "in": "query",
+            "description": "是否删除用户的评论",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deleteCarts",
+            "required": false,
+            "in": "query",
+            "description": "是否删除用户的购物车",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deleteOrders",
+            "required": false,
+            "in": "query",
+            "description": "是否删除用户的订单",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "204": {
+          "200": {
             "description": "删除成功"
+          },
+          "404": {
+            "description": "用户不存在"
+          },
+          "409": {
+            "description": "用户存在关联数据，无法删除"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/check-deletable": {
+      "get": {
+        "operationId": "UsersController_checkDeletable",
+        "summary": "检查用户是否可以删除",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "用户ID",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "检查成功"
           },
           "404": {
             "description": "用户不存在"
@@ -1407,7 +1511,7 @@
             "in": "query",
             "description": "角色ID筛选",
             "schema": {
-              "type": "number"
+              "type": "string"
             }
           },
           {
@@ -1416,7 +1520,7 @@
             "in": "query",
             "description": "状态筛选：0-禁用，1-启用",
             "schema": {
-              "type": "number"
+              "type": "string"
             }
           },
           {
@@ -1660,6 +1764,25 @@
           {
             "bearer": []
           }
+        ]
+      }
+    },
+    "/admin/roles": {
+      "get": {
+        "operationId": "AdminRoleController_findAll",
+        "summary": "获取角色列表",
+        "description": "获取所有可用的管理员角色",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "获取成功"
+          },
+          "401": {
+            "description": "未授权"
+          }
+        },
+        "tags": [
+          "后台管理-角色管理"
         ]
       }
     },
@@ -2648,6 +2771,11 @@
           "roleId": {
             "type": "number",
             "description": "角色ID",
+            "example": 1
+          },
+          "status": {
+            "type": "number",
+            "description": "状态",
             "example": 1
           }
         },

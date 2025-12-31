@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card, Row, Col, Statistic, Select, Button, Table, message } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined, DownloadOutlined } from '@ant-design/icons';
 import {
@@ -64,10 +64,13 @@ const Dashboard: React.FC = () => {
     const [categoryDistribution, setCategoryDistribution] = useState<CategoryDistributionData | null>(null);
     const [orderStatusDistribution, setOrderStatusDistribution] = useState<OrderStatusDistributionData | null>(null);
     const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
-    const [isInitialized, setIsInitialized] = useState(false);
 
     // 筛选条件
     const [dimension, setDimension] = useState<'week' | 'day' | 'month'>('day');
+
+    // 用于防止 React.StrictMode 导致的重复调用
+    const isInitialLoadRef = useRef(true);
+    const currentDimensionRef = useRef(dimension);
 
     // 获取核心指标数据
     const fetchCoreMetrics = async () => {
@@ -146,19 +149,24 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // 初始加载数据 - 只在组件挂载时执行一次
+    // 数据加载 - 防止 React.StrictMode 导致的重复调用
     useEffect(() => {
-        refreshData();
-    }, []);
+        // 检查是否是真正的 dimension 变化，而不是 StrictMode 导致的重复渲染
+        if (isInitialLoadRef.current || currentDimensionRef.current !== dimension) {
+            console.log('Dashboard useEffect triggered - dimension:', dimension, 'isInitial:', isInitialLoadRef.current);
 
-    // 筛选条件变化时重新加载数据 - 排除初始渲染
-    useEffect(() => {
-        // 只有在组件已经挂载后，dimension 变化时才重新加载数据
-        // 避免与初始加载重复
-        if (coreMetrics !== null || salesTrend !== null) {
+            // 更新 refs
+            isInitialLoadRef.current = false;
+            currentDimensionRef.current = dimension;
+
             refreshData();
         }
-    }, [dimension]);
+
+        // 清理函数 - 在组件卸载或重新渲染时调用
+        return () => {
+            console.log('Dashboard useEffect cleanup');
+        };
+    }, [dimension]); // 只依赖 dimension，初始渲染和 dimension 变化时都会执行
 
     // 导出销售趋势数据到Excel
     const handleExportSalesTrend = async () => {

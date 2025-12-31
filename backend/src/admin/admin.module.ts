@@ -12,12 +12,14 @@ import { Coupon } from './entities/coupon.entity';
 // 服务导入
 import { AdminAuthService } from './services/admin-auth.service';
 import { AdminUserService } from './services/admin-user.service';
+import { AdminRoleService } from './services/admin-role.service';
 import { DashboardService } from './services/dashboard.service';
 import { AdminSeedService } from '../seed/admin-seed.service';
 
 // 控制器导入
 import { AdminAuthController } from './controllers/admin-auth.controller';
 import { AdminUserController } from './controllers/admin-user.controller';
+import { AdminRoleController } from './controllers/admin-role.controller';
 import { DashboardController } from './controllers/dashboard.controller';
 
 // 其他实体导入（用于DashboardService）
@@ -49,18 +51,21 @@ import { Order } from '../orders/entities/order.entity';
   controllers: [
     AdminAuthController,
     AdminUserController,
+    AdminRoleController,
     DashboardController,
   ],
   providers: [
     AdminAuthService,
     AdminUserService,
+    AdminRoleService,
     DashboardService,
     AdminSeedService,
   ],
   exports: [
     AdminAuthService,
     AdminUserService,
+    AdminRoleService,
     DashboardService,
   ],
 })
-export class AdminModule {}
+export class AdminModule { }

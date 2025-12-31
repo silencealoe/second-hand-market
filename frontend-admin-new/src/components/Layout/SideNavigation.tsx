@@ -3,7 +3,8 @@ import { Layout, Menu } from 'antd';
 import {
     DashboardOutlined,
     UserOutlined,
-    SettingOutlined
+    SettingOutlined,
+    TeamOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
@@ -25,18 +26,43 @@ const SideNavigation: React.FC = () => {
             onClick: () => navigate('/dashboard'),
         },
         {
-            key: '/users',
-            icon: <UserOutlined />,
-            label: '用户管理',
-            onClick: () => navigate('/users'),
-        },
-        {
-            key: '/system',
+            key: 'system',
             icon: <SettingOutlined />,
             label: '系统管理',
-            onClick: () => navigate('/system'),
+            children: [
+                {
+                    key: '/system/users',
+                    icon: <UserOutlined />,
+                    label: '用户管理',
+                    onClick: () => navigate('/system/users'),
+                },
+                {
+                    key: '/system/settings',
+                    icon: <TeamOutlined />,
+                    label: '系统设置',
+                    onClick: () => navigate('/system/settings'),
+                },
+            ],
         },
     ];
+
+    // 获取当前选中的菜单项
+    const getSelectedKeys = () => {
+        const pathname = location.pathname;
+        if (pathname.startsWith('/system/')) {
+            return [pathname];
+        }
+        return [pathname];
+    };
+
+    // 获取展开的菜单项
+    const getOpenKeys = () => {
+        const pathname = location.pathname;
+        if (pathname.startsWith('/system/')) {
+            return ['system'];
+        }
+        return [];
+    };
 
     return (
         <Sider
@@ -46,7 +72,8 @@ const SideNavigation: React.FC = () => {
         >
             <Menu
                 mode="inline"
-                selectedKeys={[location.pathname]}
+                selectedKeys={getSelectedKeys()}
+                defaultOpenKeys={getOpenKeys()}
                 items={menuItems}
                 className="navigation-menu"
             />

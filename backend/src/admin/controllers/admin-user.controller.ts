@@ -1,24 +1,24 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  Query, 
-  UseGuards, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
   Req,
   HttpCode,
   HttpStatus
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
-  ApiBearerAuth, 
-  ApiQuery, 
-  ApiParam 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiParam
 } from '@nestjs/swagger';
 import { AdminUserService } from '../services/admin-user.service';
 import { CreateAdminUserDto } from '../dto/create-admin-user.dto';
@@ -36,7 +36,7 @@ import { PageQueryParams } from '../types/page-query-params.interface';
 @ApiTags('后台管理-用户管理')
 @Controller('admin/users')
 export class AdminUserController {
-  constructor(private readonly adminUserService: AdminUserService) {}
+  constructor(private readonly adminUserService: AdminUserService) { }
 
   /**
    * 创建管理员用户
@@ -59,14 +59,14 @@ export class AdminUserController {
     const currentUserId = req.user.sub;
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
-    
+
     const result = await this.adminUserService.create(
       createAdminUserDto,
       currentUserId,
       ipAddress,
       userAgent
     );
-    
+
     return {
       code: 200,
       message: 'success',
@@ -97,17 +97,23 @@ export class AdminUserController {
   @Public()
   async findAll(
     @Query() pageQueryParams: PageQueryParams,
-    @Query('roleId') roleId?: number,
-    @Query('status') status?: number
+    @Query('roleId') roleId?: string,
+    @Query('status') status?: string
   ) {
+    // 安全地转换参数，避免NaN
+    const page = parseInt(pageQueryParams.page?.toString() || '1', 10) || 1;
+    const limit = parseInt(pageQueryParams.limit?.toString() || '10', 10) || 10;
+    const parsedRoleId = roleId ? parseInt(roleId, 10) : undefined;
+    const parsedStatus = status ? parseInt(status, 10) : undefined;
+
     const result = await this.adminUserService.findAll({
-      page: Number(pageQueryParams.page || 1),
-      limit: Number(pageQueryParams.limit || 10),
+      page,
+      limit,
       search: pageQueryParams.search,
-      roleId,
-      status,
+      roleId: isNaN(parsedRoleId) ? undefined : parsedRoleId,
+      status: isNaN(parsedStatus) ? undefined : parsedStatus,
     });
-    
+
     return {
       code: 200,
       message: 'success',
@@ -130,7 +136,7 @@ export class AdminUserController {
   @ApiResponse({ status: 404, description: '用户不存在' })
   async findOne(@Param('id') id: string) {
     const result = await this.adminUserService.findOne(+id);
-    
+
     return {
       code: 200,
       message: 'success',
@@ -162,7 +168,7 @@ export class AdminUserController {
     const currentUserId = req.user.sub;
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
-    
+
     const result = await this.adminUserService.update(
       +id,
       updateAdminUserDto,
@@ -170,7 +176,7 @@ export class AdminUserController {
       ipAddress,
       userAgent
     );
-    
+
     return {
       code: 200,
       message: 'success',
@@ -197,14 +203,14 @@ export class AdminUserController {
     const currentUserId = req.user.sub;
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
-    
+
     const result = await this.adminUserService.remove(
       +id,
       currentUserId,
       ipAddress,
       userAgent
     );
-    
+
     return {
       code: 200,
       message: 'success',
@@ -231,14 +237,14 @@ export class AdminUserController {
     const currentUserId = req.user.sub;
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
-    
+
     const result = await this.adminUserService.resetPassword(
       +id,
       currentUserId,
       ipAddress,
       userAgent
     );
-    
+
     return {
       code: 200,
       message: 'success',
@@ -271,7 +277,7 @@ export class AdminUserController {
     const currentUserId = req.user.sub;
     const ipAddress = req.ip || '';
     const userAgent = req.headers['user-agent'];
-    
+
     const result = await this.adminUserService.toggleStatus(
       +id,
       status,
@@ -279,7 +285,7 @@ export class AdminUserController {
       ipAddress,
       userAgent
     );
-    
+
     return {
       code: 200,
       message: 'success',
